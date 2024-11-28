@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import Ionicons from "react-native-vector-icons/Ionicons";
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const Favorite = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCar, setSelectedCar] = useState(null);
+
   const favoriteCars = [
     {
       name: 'Tesla Model S 2023',
@@ -30,6 +34,22 @@ const Favorite = ({ navigation }) => {
     }
   ];
 
+  const handleTrashPress = (car) => {
+    setSelectedCar(car);
+    setModalVisible(true);
+  };
+
+  const handleConfirmDelete = () => {
+    console.log(`${selectedCar.name} has been removed.`);
+    setModalVisible(false);
+    // Logika untuk menghapus mobil dari daftar favorit
+  };
+
+  const handleCancelDelete = () => {
+    setSelectedCar(null);
+    setModalVisible(false);
+  };
+
   return (
     <View className="flex-1 bg-gray-100">
       {/* Header */}
@@ -51,13 +71,25 @@ const Favorite = ({ navigation }) => {
                 <Text className="text-[14px] font-poppins-regular text-gray-600 mt-1">{car.location}</Text>
                 <Text className="text-[16px] font-poppins-semibold text-blue-500 mt-1">{car.price}</Text>
               </View>
-              <TouchableOpacity className="rounded-full justify-center items-center p-2 hover:bg-red-100 transition duration-200">
+              <TouchableOpacity
+                onPress={() => handleTrashPress(car)}
+                className="rounded-full justify-center items-center p-2 hover:bg-red-100 transition duration-200"
+              >
                 <Ionicons name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>
           ))}
         </View>
       </ScrollView>
+
+      <ConfirmationModal
+        modalVisible={modalVisible}
+        title="Delete Favorite?"
+        subTitle={`Are you sure you want to delete ${selectedCar?.name} from your favorites?`}
+        url={require('../../assets/lottie/question-animation.json')}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </View>
   );
 };

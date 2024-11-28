@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { tw } from 'nativewind';
+import { useUser } from "@/src/services";
 
 const Profile = () => {
+  const { data: user } = useUser();
   return (
     <View className="flex-1 bg-gray-100">
       <View className="bg-blue-600 h-[160px] relative">
@@ -13,8 +14,8 @@ const Profile = () => {
               <Ionicons name="person-circle" size={64} color="white" />
             </View>
             <View>
-              <Text className="font-poppins-medium text-white text-[18px]">Customer</Text>
-              <Text className="font-poppins-regular text-white text-[14px] opacity-90">customer@testing.com</Text>
+              <Text className="font-poppins-medium text-white text-[18px]">{user.name}</Text>
+              <Text className="font-poppins-regular text-white text-[14px] opacity-90">{user.email }</Text>
             </View>
           </View>
         </View>

@@ -11,7 +11,7 @@ const Home = ({ navigation }) => {
       {/* Header Section with Gradient Background */}
       <LinearGradient colors={['#097cf9', '#0ea5e9']} className="rounded-b-2xl overflow-hidden p-5">
         <View className="pt-10">
-          <Text className="font-poppins-semibold text-white text-lg shadow-md">Hi, Selamat Datang di Rentmate</Text>
+          <Text className="font-poppins-semibold text-white text-lg shadow-md">Hi, Selamat Datang di BluCarra</Text>
           <View className="flex-row items-center mt-5">
             <View className="flex-1 bg-white rounded-lg px-4 py-2 flex-row items-center">
               <TextInput 

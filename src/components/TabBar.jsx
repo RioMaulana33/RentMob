@@ -54,7 +54,7 @@ function TabBar({ state, navigation }) {
           )}
           <IonIcons 
             name={iconName} 
-            size={25} 
+            size={23} 
             color={isFocused ? '#60a5fa' : '#a1a1aa'} 
           />
           <Text style={[
@@ -102,13 +102,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   activeIndicator: {
-    width: 96,
+    width: 80,
     height: 4,
     backgroundColor: '#60a5fa',
     borderBottomLeftRadius: 999,
     borderBottomRightRadius: 999,
     position: 'absolute',
-    top: -12,
+    top: -12.5,
   },
   tabText: {
     fontSize: 12,
