@@ -5,6 +5,7 @@ import { useUser } from "@/src/services";
 
 const Profile = () => {
   const { data: user } = useUser();
+
   return (
     <View className="flex-1 bg-gray-100">
       <View className="bg-blue-600 h-[160px] relative">

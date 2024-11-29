@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useUser } from './src/services';
 const { Screen, Navigator } = createStackNavigator();
 
 import {
@@ -49,14 +50,20 @@ const queryClient = new QueryClient({
   },
 });
 
-const Navigation = () => (
+const Navigation = () => {
+  const { data: user, isSuccess } = useUser();
+  return (
+
   <NavigationContainer>
       <Navigator screenOptions={{ headerShown: false }}>
-        <Screen name="Login" component={LoginScreen} />
-        <Screen name="MainApp" component={BottomTabNavigator} />
+        {user && isSuccess ? (
+          <Screen name="MainApp" component={BottomTabNavigator} />
+        ) : (
+          <Screen name="Login" component={LoginScreen} />
+        )}
       </Navigator>
     </NavigationContainer>
-)
+)}
 
 function Section({ children, title }: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
