@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
-import { tw } from 'nativewind';
+import LinearGradient from 'react-native-linear-gradient';
 
 const MyRent = () => {
   const [filterStatus, setFilterStatus] = useState('all');
@@ -30,13 +30,12 @@ const MyRent = () => {
       <View className="flex-row justify-between items-center mb-2">
         <View>
           <Text className="font-poppins-semibold text-lg text-gray-800">{item.title}</Text>
-          <View className ="border-b border-gray-200 my-3 "/>
+          <View className="border-b border-gray-200 my-3"/>
           <View className="flex-row items-center">
             <IonIcons name="calendar-outline" size={16} color="#6B7280" />
             <Text className="font-poppins-regular text-sm text-gray-600 ml-2">{item.date}</Text>
           </View>
         </View>
-       
       </View>
       <View className="flex-row justify-between items-center">
         <View>
@@ -47,7 +46,7 @@ const MyRent = () => {
           <Text className="font-poppins-regular text-sm text-gray-600">Harga:</Text>
           <Text className="font-poppins-medium text-base text-gray-800">{item.price}</Text>
         </View>
-        <View style={{ top: -30 }}className={`px-4 py-2 rounded-full ${item.status === 'Selesai' ? 'bg-blue-100' : 'bg-orange-100'}`}>
+        <View style={{ top: -30 }} className={`px-4 py-2 rounded-full ${item.status === 'Selesai' ? 'bg-blue-100' : 'bg-orange-100'}`}>
           <Text className={`font-poppins-medium text-sm ${item.status === 'Selesai' ? 'text-blue-500' : 'text-orange-500'}`}>
             {item.status}
           </Text>
@@ -58,9 +57,9 @@ const MyRent = () => {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <View className="bg-blue-600 h-24 relative">
+      <LinearGradient colors={['#0255d6', '#0372f5']} className="h-24 relative">
         <View className="absolute bottom-[-30px] left-0 right-0 h-16 bg-gray-100 rounded-t-3xl" />
-      </View>
+      </LinearGradient>
       <View className="flex-1 px-4 mt-[-20px]">
         <Text className="font-poppins-medium text-lg text-gray-800 my-3">Riwayat Rental</Text>
 

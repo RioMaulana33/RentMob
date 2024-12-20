@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import Ionicons from "react-native-vector-icons/Ionicons";
-import ConfirmationModal from '../../components/ConfirmationModal';
+import LinearGradient from 'react-native-linear-gradient';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const Favorite = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -53,13 +54,13 @@ const Favorite = ({ navigation }) => {
   return (
     <View className="flex-1 bg-gray-100">
       {/* Header */}
-      <View className="bg-[#097cf9] rounded-b-[15px] overflow-hidden">
+      <LinearGradient colors={['#0255d6', '#0372f5']} className="rounded-b-[15px] overflow-hidden">
         <View className="px-5 pt-10 pb-5">
-          <Text className="font-poppins-semibold text-white text-[18px] shadow-[rgba(0,0,0,0.4)_0_-1px_10px]">Cari mobil favoritmu di sini</Text>
+          <Text className="font-poppins-semibold text-white text-[18px]">Cari mobil favoritmu di sini</Text>
           <Text className="font-poppins-regular text-white text-[13px] mt-1">Temukan mobil jadi lebih mudah</Text>
         </View>
-      </View>
-
+      </LinearGradient>
+  
       <ScrollView className="px-5 pt-5" showsVerticalScrollIndicator={false}>
         {/* Favorite Cars Section */}
         <View className="mb-5">
@@ -86,7 +87,7 @@ const Favorite = ({ navigation }) => {
         modalVisible={modalVisible}
         title="Delete Favorite?"
         subTitle={`Are you sure you want to delete ${selectedCar?.name} from your favorites?`}
-        url={require('../../assets/lottie/question-animation.json')}
+        url={require('../../../assets/lottie/question-animation.json')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

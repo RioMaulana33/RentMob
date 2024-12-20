@@ -29,7 +29,7 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
-import LoginScreen from './src/screen/auth/LoginScreen';
+import AuthNavigator from './src/screen/AuthNavigator';
 import BottomTabNavigator from './src/screen/BottomTabNavigator';
 
 type SectionProps = PropsWithChildren<{
@@ -53,18 +53,17 @@ const queryClient = new QueryClient({
 const Navigation = () => {
   const { data: user, isSuccess } = useUser();
   return (
-
-  <NavigationContainer>
+    <NavigationContainer>
       <Navigator screenOptions={{ headerShown: false }}>
         {user && isSuccess ? (
           <Screen name="MainApp" component={BottomTabNavigator} />
         ) : (
-          <Screen name="Login" component={LoginScreen} />
+          <Screen name="Auth" component={AuthNavigator}/>
         )}
       </Navigator>
     </NavigationContainer>
-)}
-
+  )
+}
 function Section({ children, title }: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (

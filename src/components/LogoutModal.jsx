@@ -19,7 +19,7 @@ export default function LogoutModal({
               source={url}
               autoPlay
               loop={false}
-              style={{ width: 200, height: 200 }}
+              style={{ width: 150, height: 150 }}
             />
            
             <Text className="text-md text-gray-600 text-center my-2 font-poppins-regular">
@@ -31,7 +31,7 @@ export default function LogoutModal({
               onPress={onConfirm}
               className="bg-blue-500 py-3.5 rounded-xl">
               <Text className="text-center text-white font-poppins-medium text-base">
-                Hapus
+                Ya, Logout
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
