@@ -106,7 +106,7 @@ const Home = ({ navigation }) => {
       className="flex-row items-center p-4 border-b border-gray-200"
     >
       <Icon name="location" size={24} color="#0255d6" style={{ marginRight: 12 }} />
-      <Text className="text-base font-poppins-medium">{item.nama}</Text>
+      <Text className="text-base font-poppins-medium text-gray-800">{item.nama}</Text>
     </TouchableOpacity>
   );
 
@@ -176,7 +176,7 @@ const Home = ({ navigation }) => {
           }}
         >
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-poppins-semibold">Pilih Kota Anda</Text>
+            <Text className="text-xl font-poppins-semibold text-black">Pilih Kota Anda</Text>
             <TouchableOpacity onPress={() => setIsCityModalVisible(false)}>
               <Icon name="close" size={24} color="#0255d6" />
             </TouchableOpacity>

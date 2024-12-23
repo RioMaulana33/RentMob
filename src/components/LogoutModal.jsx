@@ -29,14 +29,14 @@ export default function LogoutModal({
           <View className="mt-4 space-y-4">
             <TouchableOpacity
               onPress={onConfirm}
-              className="bg-blue-500 py-3.5 rounded-xl">
+              className="bg-blue-500 py-3.5 rounded-full">
               <Text className="text-center text-white font-poppins-medium text-base">
                 Ya, Logout
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onCancel}
-              className="bg-gray-200 py-3.5 rounded-xl mt-3">
+              className="bg-gray-200 py-3.5 rounded-full mt-3">
               <Text className="text-center text-black font-poppins-medium text-base">
                 Batal
               </Text>

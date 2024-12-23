@@ -1,13 +1,50 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions, ImageBackground, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, ImageBackground, Animated, ActivityIndicator, Modal, Image } from 'react-native';
 import { useForm, Controller } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import axios from '../../libs/axios';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { TextField, Button, Colors } from "react-native-ui-lib";
-import AlreadyEmailModal from '../../components/AlreadyEmailModal';
 
 const { width, height } = Dimensions.get('window');
+
+const AlreadyEmailModal = ({ isVisible, onClose, message }) => {
+  if (!isVisible) return null;
+
+  return (
+    <Modal transparent visible={isVisible} animationType='fade'>
+      <View className="flex-1 bg-black/50 justify-center items-center">
+        <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
+          <View className="items-center">
+            <View className="w-60 h-60 mb-3">   
+              <Image
+                source={require('../../assets/image/already-vector.png')}
+                className="w-full h-full object-contain"
+              />
+            </View>
+            
+            <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
+              Email sudah terdaftar
+            </Text>
+            
+            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
+              Gunakan email lain atau login menggunakan email ini
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            onPress={onClose}
+            className="bg-gray-200 py-3 rounded-full items-center"
+          >
+            <Text className="text-black font-poppins-medium text-sm">
+              Tutup
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const RegisterScreen = ({ navigation }) => {
   const shakeAnimation = React.useRef(new Animated.Value(0)).current;
@@ -60,28 +97,17 @@ const RegisterScreen = ({ navigation }) => {
     try {
       setIsLoading(true);
       const res = await axios.post("/auth/register", data);
-
-      // Navigate to success screen
       navigation.navigate('SuccessRegis');
-    }  catch (error) {
-      console.error(error.response?.data);
-      
-      if (error.response?.data?.message?.includes('Email sudah terdaftar')) {
-        setErrorMessage('Email sudah ter-registrasi');
+    } catch (error) {
+      if (error.response?.data?.message === 'The email has already been taken.') {
         setErrorModalVisible(true);
+        setErrorMessage('Email sudah terdaftar');
       }
-      
       startShakeAnimation();
-
     } finally {
       setIsLoading(false);
     }
   };
-
-  const closeErrorModal = () => {
-    setErrorModalVisible(false);
-  };
-
   React.useEffect(() => {
     if (Object.keys(errors).length > 0) {
       startShakeAnimation();
@@ -140,6 +166,7 @@ const RegisterScreen = ({ navigation }) => {
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholder={"Nama Lengkap"}
                       placeholderTextColor="#999"
+                      maxLength={20}
                       enableErrors
                       fieldStyle={{
                         paddingVertical: 12,
@@ -255,6 +282,7 @@ const RegisterScreen = ({ navigation }) => {
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholder={"Password"}
                       placeholderTextColor="#999"
+                      maxLength={12}
                       secureTextEntry={!isPasswordVisible}
                       enableErrors
                       fieldStyle={{
@@ -326,6 +354,7 @@ const RegisterScreen = ({ navigation }) => {
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholderTextColor="#999"
                       placeholder={"Konfirmasi Password"}
+                      maxLength={12}
                       secureTextEntry={!isPasswordVisible}
                       enableErrors
                       fieldStyle={{
@@ -370,6 +399,12 @@ const RegisterScreen = ({ navigation }) => {
             </View>
           </Animated.View>
 
+          <AlreadyEmailModal
+            isVisible={errorModalVisible}
+            message={errorMessage}
+            onClose={() => setErrorModalVisible(false)}
+          />
+
           <Button
             labelStyle={{
               fontFamily: "Poppins-Medium",
@@ -412,12 +447,8 @@ const RegisterScreen = ({ navigation }) => {
           </Button>
         </View>
 
-      <AlreadyEmailModal 
-        isVisible={errorModalVisible}
-        message={errorMessage}
-        onClose={closeErrorModal}
-      />
-        <View className="flex-row justify-center mt-6">
+     
+        <View className="flex-row justify-center mt-10">
           <Text className="text-[#7f7f7f] font-poppins-regular">Sudah Punya Akun?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text className="text-[#0ea5e9] font-poppins-semibold"> Login</Text>

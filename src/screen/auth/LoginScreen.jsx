@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions, ImageBackground, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, ImageBackground, Animated, ActivityIndicator, Modal, Image } from 'react-native';
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from '../../libs/axios';
@@ -9,8 +9,48 @@ import { TextField, Button, Colors } from "react-native-ui-lib";
 
 const { width, height } = Dimensions.get('window');
 
+const ErrorModal = ({ visible, onClose }) => {
+  if (!visible) return null;  
+
+  return (
+    <Modal transparent visible={visible} animationType='fade'>
+      <View className="flex-1 bg-black/50 justify-center items-center">
+        <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
+          <View className="items-center">
+          <View className="w-60 h-60 mb-3">   
+              <Image
+                source={require('../../assets/image/already-vector.png')}
+                className="w-full h-full object-contain"
+              />
+            </View>
+            
+            <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
+               Email/Password salah
+            </Text>
+            
+            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
+              Pastikan data yang Anda isi sudah benar
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            onPress={onClose}
+            className="bg-gray-200 py-3 rounded-full items-center"
+          >
+            <Text className="text-black font-poppins-medium text-sm">
+              Tutup
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 const LoginScreen = ({ navigation }) => {
   const shakeAnimation = React.useRef(new Animated.Value(0)).current;
+  const [errorModalVisible, setErrorModalVisible] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
 
   const {
     handleSubmit,
@@ -60,7 +100,6 @@ const LoginScreen = ({ navigation }) => {
   const login = async (data) => {
     try {
       setIsLoading(true);
-      console.log('Login attempt:', data);
       const res = await axios.post("/auth/login", data);
       
       await AsyncStorage.setItem("@auth-token", res.data.token);
@@ -68,10 +107,12 @@ const LoginScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Login error:', error.response?.data);
       startShakeAnimation();
+      setErrorModalVisible(true);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   // Tambahkan useEffect untuk memicu animasi ketika ada error form
   React.useEffect(() => {
@@ -128,6 +169,7 @@ const LoginScreen = ({ navigation }) => {
                     <TextField
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholder={"Email"}
+                      keyboardType="email-address"
                       placeholderTextColor="#999"
                       enableErrors
                       fieldStyle={{
@@ -181,6 +223,7 @@ const LoginScreen = ({ navigation }) => {
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholderTextColor="#999"
                       placeholder={"Password"}
+                      maxLength={12}
                       secureTextEntry={!isPasswordVisible}
                       enableErrors
                       fieldStyle={{
@@ -239,6 +282,12 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </Animated.View>
 
+          <ErrorModal 
+            visible={errorModalVisible}
+            message={errorMessage}
+            onClose={() => setErrorModalVisible(false)}
+          />
+
           <TouchableOpacity
             onPress={() => navigation.navigate('ForgotPassword')}
             style={{
@@ -254,7 +303,7 @@ const LoginScreen = ({ navigation }) => {
             label={ isLoading || "Login"}
             labelStyle={{
               fontFamily: "Poppins-Medium",
-              color: 'white'
+              color: 'white'  
             }}
             backgroundColor={'#2563eb'}
             paddingV-14

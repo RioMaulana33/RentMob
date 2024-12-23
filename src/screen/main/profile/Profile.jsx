@@ -50,7 +50,7 @@ const Profile = ({ navigation }) => {
     >
       <View className="w-9 h-9 mr-3.5 bg-opacity-10 rounded-full items-center justify-center"
         style={{ backgroundColor: `${color}15` }}>
-        <Ionicons name={icon} size={20} color={color} />
+        <Ionicons name={icon} size={19} color={color} />
       </View>
       <Text className={`font-poppins-regular text-[14.5px] flex-1 
         ${isWarning ? 'text-red-400' : 'text-gray-600'}`}>
@@ -100,13 +100,13 @@ const Profile = ({ navigation }) => {
       <View className="flex-1 px-4 mt-[-12px]">
         <MenuSection title="Edit Profile">
           <MenuItem 
-            icon="person-outline"
+            icon="person"
             title="Edit Profile"
             color="#0372f5"
             onPress={() => navigation.navigate("EditProfile")}
           />
           <MenuItem 
-            icon="key-outline"
+            icon="key"
             title="Ganti Password"
             color="#0372f5"
             onPress={() => navigation.navigate("EditPassword")}
@@ -116,12 +116,12 @@ const Profile = ({ navigation }) => {
 
         <MenuSection title="Bantuan">
           <MenuItem 
-            icon="call-outline"
+            icon="call"
             title="Hubungi Kami"
             color="#10B981"
           />
           <MenuItem 
-            icon="help-circle-outline"
+            icon="help-circle"
             title="Pusat Bantuan"
             color="#10B981"
             isLast
@@ -130,12 +130,12 @@ const Profile = ({ navigation }) => {
 
         <MenuSection title="Info Lainnya">
           <MenuItem 
-            icon="star-outline"
+            icon="star"
             title="Review Aplikasi Kami"
             color="#F59E0B"
           />
           <MenuItem 
-            icon="log-out-outline"
+            icon="log-out"
             title="Logout"
             color="#EF4444"
             onPress={handleLogout}
