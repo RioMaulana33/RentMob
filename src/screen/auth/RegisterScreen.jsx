@@ -145,11 +145,6 @@ const RegisterScreen = ({ navigation }) => {
                 width: '100%',
                 alignSelf: 'center',
               },
-              {
-                transform: [{
-                  translateX: shakeAnimation
-                }]
-              }
             ]}
           >
             <View marginB-25 className='mt-2 relative'>
@@ -225,6 +220,7 @@ const RegisterScreen = ({ navigation }) => {
                     <TextField
                       style={{ fontFamily: "Poppins-Regular" }}
                       placeholder={"Email"}
+                      keyboardType="email-address"
                       placeholderTextColor="#999"
                       enableErrors
                       fieldStyle={{

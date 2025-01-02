@@ -152,11 +152,6 @@ const LoginScreen = ({ navigation }) => {
                 width: '100%',
                 alignSelf: 'center',
               },
-              {
-                transform: [{
-                  translateX: shakeAnimation
-                }]
-              }
             ]}
           >
             <View marginB-25 className='mt-2'>

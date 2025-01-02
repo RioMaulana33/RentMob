@@ -1,27 +1,37 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
+
 function TabBar({ state, navigation }) {
-  if (!state) {
-    return null;
-  }
+  if (!state) return null;
+
+  const animatedValues = React.useRef(
+    state.routes.map(() => new Animated.Value(0))
+  ).current;
 
   const handlePress = (screenName, index) => {
+    state.routes.forEach((_, i) => {
+      Animated.timing(animatedValues[i], {
+        toValue: i === index ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
     navigation.navigate(screenName);
   };
 
   const getIconName = (screenName) => {
     switch (screenName) {
       case 'Home':
-        return 'home';
+        return 'home-outline';
       case 'MyRent':
-        return 'key';
+        return 'key-outline';
       case 'Favorite':
-        return 'heart';
+        return 'heart-outline';
       case 'Profile':
-        return 'person';
+        return 'person-outline';
       default:
-        return 'home';
+        return 'home-outline';
     }
   };
 
@@ -29,51 +39,48 @@ function TabBar({ state, navigation }) {
     const iconName = getIconName(screenName);
     const isFocused = state.index === index;
     
+    const translateY = animatedValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -1.3], 
+    });
+
     return (
       <TouchableOpacity
         key={screenName}
-        style={[
-          styles.tabContainer,
-          { justifyContent: isFocused ? 'center' : 'flex-end' }
-        ]}
+        style={styles.tabContainer}
         onPress={() => handlePress(screenName, index)}
+        activeOpacity={0.7}
       >
-        <View
+        <Animated.View
           style={[
             styles.iconContainer,
-            { shadowColor: isFocused ? '#60a5fa' : 'transparent', 
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isFocused ? 0.5 : 0,
-              shadowRadius: 6,
-              elevation: isFocused ? 10 : 0
-            }
+            { transform: [{ translateY }] }
           ]}
         >
-          {isFocused && (
-            <View style={styles.activeIndicator} />
-          )}
           <IonIcons 
-            name={iconName} 
+            name={isFocused ? iconName.replace('-outline', '') : iconName}
             size={22} 
-            color={isFocused ? '#60a5fa' : '#a1a1aa'} 
+            color={isFocused ? '#2563eb' : '#94a3b8'} 
           />
           <Text style={[
             styles.tabText,
             { 
-              color: isFocused ? '#60a5fa' : '#a1a1aa',
-              fontFamily: isFocused ? 'Poppins-SemiBold' : 'Poppins-SemiBold'
+              color: isFocused ? '#2563eb' : '#94a3b8',
+              fontWeight: isFocused ? '600' : '400'
             }
           ]}>
             {screenName}
           </Text>
-        </View>
+        </Animated.View>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      {state.routes.map((route, index) => renderTab(route.name, index))}
+      <View style={styles.content}>
+        {state.routes.map((route, index) => renderTab(route.name, index))}
+      </View>
     </View>
   );
 }
@@ -84,36 +91,38 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     left: 0,
-    elevation: 0,
-    height: 75,
     backgroundColor: '#ffffff',
-    borderTopWidth: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  content: {
     flexDirection: 'row',
+    paddingTop: 8,
+    paddingBottom: 12,
     justifyContent: 'space-around',
-    alignItems: 'center',
   },
   tabContainer: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
   },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  activeIndicator: {
-    width: 80,
-    height: 4,
-    backgroundColor: '#60a5fa',
-    borderBottomLeftRadius: 999,
-    borderBottomRightRadius: 999,
-    position: 'absolute',
-    top: -14,
+    paddingHorizontal: 12,
   },
   tabText: {
     fontSize: 10,
     marginTop: 4,
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 
-export default TabBar;  
+export default TabBar;

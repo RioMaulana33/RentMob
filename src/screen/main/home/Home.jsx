@@ -5,6 +5,7 @@ import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from '../../../libs/axios';
+import FastImage from 'react-native-fast-image';
 
 const { height, width } = Dimensions.get('window');
 
@@ -16,9 +17,11 @@ const Home = ({ navigation }) => {
   const [kotaList, setKotaList] = useState([]);
   const [isCityModalVisible, setIsCityModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+
   const [isCarDetailsModalVisible, setIsCarDetailsModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
+
 
   const formatRupiah = (number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -29,20 +32,27 @@ const Home = ({ navigation }) => {
     }).format(number);
   };
 
+  const sortedAndFilteredCities = kotaList
+    .filter(city =>
+      city.nama.toLowerCase().includes(citySearchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.nama.localeCompare(b.nama));
+
   const renderCarDetailSpecItem = (iconName, title, value) => (
-    <View className="flex-row items-center mb-3 bg-gray-100 p-3 rounded-xl">
-      <MaterialIcon 
-        name={iconName} 
-        size={24} 
-        color="#0255d6" 
-        style={{ marginRight: 12 }} 
+    <View className="flex-row items-center mb-3 bg-gray-100 p-2.5 rounded-xl">
+      <MaterialIcon
+        name={iconName}
+        size={24}
+        color="#0255d6"
+        style={{ marginRight: 12 }}
       />
       <View className="flex-1">
         <Text className="text-gray-600 text-sm font-poppins-regular">{title}</Text>
-        <Text className="font-poppins-semibold text-base">{value}</Text>
+        <Text className="font-poppins-semibold text-base text-gray-500">{value}</Text>
       </View>
     </View>
   );
+
 
   useEffect(() => {
     const fetchKota = async () => {
@@ -64,7 +74,7 @@ const Home = ({ navigation }) => {
       setIsLoading(true);
       try {
         const response = await axios.get(`/mobil/getkota/${kotaId}`);
-        console.log(response.data );
+        console.log("Full image URL:", `${process.env.APP_URL}/storage/${response.data.data[0]?.mobil?.foto}`);
         setCars(response.data.data);
       } catch (error) {
         console.error("Error fetching cars:", error.response?.data || error.message);
@@ -181,8 +191,26 @@ const Home = ({ navigation }) => {
               <Icon name="close" size={24} color="#0255d6" />
             </TouchableOpacity>
           </View>
+
+          <View className="bg-gray-100 rounded-xl flex-row items-center px-4 mb-4">
+            <Icon name="search" size={20} color="#0255d6" style={{ marginRight: 10 }} />
+            <TextInput
+              placeholder="Cari kota"
+              placeholderTextColor="#999"
+              value={citySearchQuery}
+              onChangeText={setCitySearchQuery}
+              className="flex-1 text-black font-poppins-medium py-2"
+              style={{ fontSize: 13 }}
+            />
+            {citySearchQuery ? (
+              <TouchableOpacity onPress={() => setCitySearchQuery('')}>
+                <Icon name="close-circle" size={20} color="gray" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
           <FlatList
-            data={kotaList}
+            data={sortedAndFilteredCities}
             renderItem={renderCityItem}
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
@@ -191,107 +219,118 @@ const Home = ({ navigation }) => {
       </Modal>
 
       {/* Car Details Modal */}
-        <Modal
-      isVisible={isCarDetailsModalVisible}
-      onBackdropPress={() => setIsCarDetailsModalVisible(false)}
-      onSwipeComplete={() => setIsCarDetailsModalVisible(false)}
-      swipeDirection={['down']}
-      style={{ justifyContent: 'flex-end', margin: 0 }}
-      animationInTiming={500}
-      animationOutTiming={500}
-      backdropTransitionInTiming={500}
-      backdropTransitionOutTiming={500}
-      backdropOpacity={0.5}
-    >
-      {selectedCar && (
-        <View
-          style={{
-            backgroundColor: 'white',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            height: height * 0.85,
-          }}
-        >
-          <ScrollView 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }} // Extra padding for bottom button
-          >
-            <View className="relative">
-              <Image
-                // source={{ uri: selectedCar.mobil.foto }}
-                className="w-full h-64 rounded-t-2xl"
-                resizeMode="cover"
-              />
-              <TouchableOpacity 
-                onPress={() => setIsCarDetailsModalVisible(false)}
-                className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
-              >
-                <Icon name="close" size={24} color="#0255d6" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="px-5 pt-5">
-              <Text className="text-2xl font-poppins-semibold mb-2">
-                {selectedCar.mobil.merk} {selectedCar.mobil.model}
-              </Text>
-              <Text className="text-blue-500 text-lg font-poppins-medium mb-4">
-                 {formatRupiah(selectedCar.mobil.tarif)}/hari
-              </Text>
-
-              <View className="space-y-3">
-                {renderCarDetailSpecItem(
-                  "car", 
-                  "Tahun", 
-                  selectedCar.mobil.tahun
-                )}
-                 {renderCarDetailSpecItem(
-                  "car-info", 
-                  "Model", 
-                  selectedCar.mobil.model
-                )}
-                {renderCarDetailSpecItem(
-                  "car-shift-pattern", 
-                  "Tipe", 
-                  selectedCar.mobil.type
-                )}
-                {renderCarDetailSpecItem(
-                  "car-seat", 
-                  "Kapasitas", 
-                  `${selectedCar.mobil.kapasitas} Orang`
-                )}
-                {renderCarDetailSpecItem(
-                  "gas-station", 
-                  "Bahan Bakar", 
-                  selectedCar.mobil.bahan_bakar
-                )}
-              </View>
-            </View>
-          </ScrollView>
-
-          <View 
-            className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
-            style={{ 
-              borderTopWidth: 1, 
-              borderTopColor: '#E5E7EB' 
+      <Modal
+        isVisible={isCarDetailsModalVisible}
+        onBackdropPress={() => setIsCarDetailsModalVisible(false)}
+        onSwipeComplete={() => setIsCarDetailsModalVisible(false)}
+        swipeDirection={['down']}
+        style={{ justifyContent: 'flex-end', margin: 0 }}
+        animationInTiming={500}
+        animationOutTiming={500}
+        backdropTransitionInTiming={500}
+        backdropTransitionOutTiming={500}
+        backdropOpacity={0.5}
+      >
+        {selectedCar && (
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              height: height * 0.85,
             }}
           >
-            <TouchableOpacity
-              onPress={handleRentCar}
-              className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 100 }} // Extra padding for bottom button
             >
-              <Text className="text-white font-poppins-semibold text-base">
-                Sewa Mobil Sekarang
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-    </Modal>
+              <View className="relative">
+                <FastImage
+                  source={{
+                    uri: selectedCar.mobil.foto
+                      ? `${process.env.APP_URL}/storage/${selectedCar.mobil.foto}`
+                      : "https://via.placeholder.com",
+                    priority: FastImage.priority.high
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 256,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    backgroundColor: '#e5e5e5' // Untuk debug
+                  }}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
+                <TouchableOpacity
+                  onPress={() => setIsCarDetailsModalVisible(false)}
+                  className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
+                >
+                  <Icon name="close" size={24} color="#0255d6" />
+                </TouchableOpacity>
+              </View>
 
-      <ScrollView className="px-5 pt-5" showsVerticalScrollIndicator={false}>
+              <View className="px-5 pt-5">
+                <Text className="text-2xl font-poppins-semibold mb-2 text-black">
+                  {selectedCar.mobil.merk} {selectedCar.mobil.model}
+                </Text>
+                <Text className="text-blue-500 text-lg font-poppins-medium mb-4">
+                  {formatRupiah(selectedCar.mobil.tarif)}/hari
+                </Text>
+
+                <View className="space-y-3">
+                  {renderCarDetailSpecItem(
+                    "car",
+                    "Tahun",
+                    selectedCar.mobil.tahun
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-info",
+                    "Model",
+                    selectedCar.mobil.model
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-shift-pattern",
+                    "Tipe",
+                    selectedCar.mobil.type
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-seat",
+                    "Kapasitas",
+                    `${selectedCar.mobil.kapasitas} Orang`
+                  )}
+                  {renderCarDetailSpecItem(
+                    "gas-station",
+                    "Bahan Bakar",
+                    selectedCar.mobil.bahan_bakar
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View
+              className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: '#E5E7EB'
+              }}
+            >
+              <TouchableOpacity
+                onPress={handleRentCar}
+                className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
+              >
+                <Text className="text-white font-poppins-semibold text-base">
+                  Sewa Mobil Sekarang
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </Modal>
+
+      <ScrollView className="px-5 pt-5 mb-6" showsVerticalScrollIndicator={false}>
         <Text className="text-lg font-poppins-semibold text-gray-800 mb-2">Mobil Tersedia</Text>
         {isLoading ? (
-          <ActivityIndicator size="large" color="#0255d6" />
+          <ActivityIndicator size="large" color="#0255d6" />                               
         ) : (
           filteredCars.map((car, index) => (
             <TouchableOpacity
@@ -299,14 +338,25 @@ const Home = ({ navigation }) => {
               className="flex-row bg-white rounded-xl p-4 mb-4 shadow-md"
               onPress={() => handleCarSelect(car)}
             >
-              <Image
-                // source={{ uri: car.mobil.foto }}
-                className="w-24 h-24 rounded-lg"
+              <FastImage
+                source={{
+                  uri: car.mobil.foto
+                    ? `${process.env.APP_URL}/storage/${car.mobil.foto}`
+                    : "https://via.placeholder.com",
+                  priority: FastImage.priority.normal
+                }}
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 8,
+                  backgroundColor: '#e5e5e5' // Untuk debug
+                }}
+                resizeMode={FastImage.resizeMode.cover}
               />
               <View className="ml-4">
-                <Text className="text-lg font-poppins-semibold">{car.mobil.merk} {car.mobil.model}</Text>
+                <Text className="text-black text-lg font-poppins-semibold">{car.mobil.merk} {car.mobil.model}</Text>
                 <Text className="text-gray-500 font-poppins-regular">{car.kota.nama}</Text>
-                <Text className="text-blue-500 font-poppins-regular">{formatRupiah(car.mobil.tarif)}/day</Text> 
+                <Text className="text-blue-500 font-poppins-regular">{formatRupiah(car.mobil.tarif)}/day</Text>
               </View>
             </TouchableOpacity>
           ))

@@ -201,7 +201,7 @@ const EditPassword = ({ navigation }) => {
             ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600'}`}
         >
           <Text className="text-white font-poppins-semibold text-[14px] text-center">
-            {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

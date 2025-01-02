@@ -3,6 +3,8 @@ import { createStackNavigator, TransitionPresets } from '@react-navigation/stack
 import Profile from './Profile';
 import EditProfile from './EditProfile';
 import EditPassword from './EditPassword';
+import PusatBantuan from './PusatBantuan';
+import Hubungi from './Hubungi';
 
 const Stack = createStackNavigator();
 
@@ -22,7 +24,18 @@ const ProfileNavigator = () => {
         options={{
                 ...TransitionPresets.SlideFromRightIOS
               }}
-      />        
+      />      
+      <Stack.Screen name="PusatBantuan" component={PusatBantuan} 
+        options={{
+                ...TransitionPresets.SlideFromRightIOS
+              }}
+      />
+      <Stack.Screen name="Hubungi" component={Hubungi} 
+        options={{
+                ...TransitionPresets.SlideFromRightIOS
+              }}
+      />
+
     </Stack.Navigator>
   );
 };
