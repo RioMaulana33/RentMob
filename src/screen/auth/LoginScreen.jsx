@@ -100,7 +100,7 @@ const LoginScreen = ({ navigation }) => {
   const login = async (data) => {
     try {
       setIsLoading(true);
-      const res = await axios.post("/auth/login", data);
+      const res = await axios.post("/auth/secure/login", data);
       
       await AsyncStorage.setItem("@auth-token", res.data.token);
       queryClient.invalidateQueries(["auth", "user"]);    
@@ -284,7 +284,7 @@ const LoginScreen = ({ navigation }) => {
           />
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
+            onPress={() => navigation.navigate('ForgotPass')}
             style={{
               alignSelf: 'flex-end',
               marginBottom: 20,

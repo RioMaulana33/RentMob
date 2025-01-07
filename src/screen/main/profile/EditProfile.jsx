@@ -239,7 +239,7 @@ const EditProfile = ({ navigation }) => {
 
       <ScrollView className="flex-1 px-4 pt-4">
         <View className="bg-white p-5 rounded-2xl shadow-sm mb-6">
-          <View className="items-center mb-8">
+          <View className="items-center mb-8  ">
           <View>
               <FastImage
                 source={{
@@ -252,6 +252,7 @@ const EditProfile = ({ navigation }) => {
                   borderRadius: 50,
                   borderWidth: 3,
                   borderColor: "#ececec",
+                  left: 8
                 }}
                 resizeMode={FastImage.resizeMode.cover}
               />
@@ -259,7 +260,7 @@ const EditProfile = ({ navigation }) => {
                 onPress={() => setPhotoModalVisible(true)}
                 className="mt-3"
               >
-                <Text className="text-blue-600 font-poppins-medium text-[14px] text-center right-2">
+                <Text className="text-blue-600 font-poppins-medium text-[14px] text-center self-center">
                   Ubah Foto Profile
                 </Text>
               </TouchableOpacity>

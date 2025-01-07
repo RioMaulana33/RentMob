@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import Home from '../screen/main/home/Home';
+import HomeNavigator from './main/home/Index';
 import MyRent from './main/myrent/MyRent';
 import Favorite from './main/favorite/Favorite';
 import TabBar from '../components/TabBar';
@@ -15,7 +15,7 @@ const BottomTabNavigator = () => {
       tabBar={props => {
         const currentRoute = getFocusedRouteNameFromRoute(props.navigation.getState().routes[props.state.index]);
         
-        const mainScreens = ['Home', 'MyRent', 'Favorite', 'ProfileMain'];
+        const mainScreens = ['HomeMain', 'MyRent', 'Favorite', 'ProfileMain'];
         const shouldShowTabBar = mainScreens.includes(currentRoute) || currentRoute === undefined;
         
         if (!shouldShowTabBar) {
@@ -30,7 +30,7 @@ const BottomTabNavigator = () => {
     >
       <Tab.Screen 
         name="Home" 
-        component={Home} 
+        component={HomeNavigator} 
       />
       <Tab.Screen 
         name="MyRent" 
