@@ -4,89 +4,10 @@ import { useForm, Controller } from "react-hook-form";
 import axios from '../../libs/axios';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { TextField, Button, Colors } from "react-native-ui-lib";
-import AnimatedLottieView from 'lottie-react-native';
 import OTPInput from '../../components/OTPInput';
-
+import { RegistModal, SuccessModal } from '../../components/RegistModal';
 
 const { width, height } = Dimensions.get('window');
-
-const SuccessModal = ({ visible, onClose, message }) => {
-  if (!visible) return null;
-
-  return (
-    <Modal transparent visible={visible} animationType='fade'>
-      <View className="flex-1 bg-black/50 justify-center items-center">
-        <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
-          <View className="items-center">
-            <View className="w-60 h-60 mb-3">
-              <AnimatedLottieView
-                source={require('../../assets/lottie/check-animation.json')}
-                autoPlay
-                loop={false}
-                className="w-full h-full object-contain"
-              />
-            </View>
-
-            <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
-              Berhasil
-            </Text>
-
-            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
-              {message}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={onClose}
-            className="bg-gray-200 py-3 rounded-full items-center"
-          >
-            <Text className="text-black font-poppins-medium text-sm">
-              Tutup
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-const ErrorModal = ({ visible, onClose, message }) => {
-  if (!visible) return null;
-
-  return (
-    <Modal transparent visible={visible} animationType='fade'>
-      <View className="flex-1 bg-black/50 justify-center items-center">
-        <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
-          <View className="items-center">
-            <View className="w-60 h-60 mb-3">
-              <Image
-                source={require('../../assets/image/regis-vector.png')}
-                className="w-full h-full object-contain"
-              />
-            </View>
-
-            <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
-              Email tidak terdaftar
-            </Text>
-
-            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
-              Silahkan masukkan email yang terdaftar pada aplikasi
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={onClose}
-            className="bg-gray-200 py-3 rounded-full items-center"
-          >
-            <Text className="text-black font-poppins-medium text-sm">
-              Tutup
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [step, setStep] = React.useState(1); // 1: email, 2: OTP, 3: new password
@@ -94,8 +15,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const shakeAnimation = React.useRef(new Animated.Value(0)).current;
   const [successModalVisible, setSuccessModalVisible] = React.useState(false);
   const [errorModalVisible, setErrorModalVisible] = React.useState(false);
+  const [errorType, setErrorType] = React.useState('default');
   const [modalMessage, setModalMessage] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isPasswordVisible, setPasswordVisible] = React.useState(false);
+  const [isConfirmPasswordVisible, setConfirmPasswordVisible] = React.useState(false);
 
   const {
     control,
@@ -146,7 +70,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setSuccessModalVisible(true);
       setStep(2);
     } catch (error) {
-      setModalMessage(error.response?.data?.message || 'Gagal mengirim OTP');
+      setErrorType('email');
+      setModalMessage('Email tidak terdaftar pada aplikasi');
       setErrorModalVisible(true);
       startShakeAnimation();
     } finally {
@@ -165,7 +90,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setSuccessModalVisible(true);
       setStep(3);
     } catch (error) {
-      setModalMessage(error.response?.data?.message || 'Kode OTP tidak valid');
+      setErrorType('otp');
+      setModalMessage('Kode OTP yang Anda masukkan salah');
       setErrorModalVisible(true);
       startShakeAnimation();
     } finally {
@@ -187,6 +113,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         navigation.navigate('Login');
       }, 2000);
     } catch (error) {
+      setErrorType('default');
       setModalMessage(error.response?.data?.message || 'Gagal mereset password');
       setErrorModalVisible(true);
       startShakeAnimation();
@@ -195,9 +122,224 @@ const ForgotPasswordScreen = ({ navigation }) => {
     }
   };
 
-  const [isPasswordVisible, setPasswordVisible] = React.useState(false);
   const togglePasswordVisibility = () => {
     setPasswordVisible(!isPasswordVisible);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setConfirmPasswordVisible(!isConfirmPasswordVisible);
+  };
+
+  const renderFormStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <View marginB-25 className='mt-2'>
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: "Email tidak boleh kosong",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Email tidak valid"
+                }
+              }}
+              render={({ field: { onChange, value } }) => (
+                <View>
+                  <TextField
+                    style={{ fontFamily: "Poppins-Regular" }}
+                    placeholder="Email"
+                    keyboardType="email-address"
+                    placeholderTextColor="#999"
+                    enableErrors
+                    fieldStyle={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 45,
+                      borderRadius: 25,
+                      borderWidth: 1,
+                      borderColor: errors.email ? '#ef4444' : Colors.grey60,
+                      backgroundColor: '#f5f5f5',
+                    }}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                  <View style={{
+                    position: "absolute",
+                    left: 15,
+                    top: 15,
+                  }}>
+                    <Ionicons name="mail" size={20} color={errors.email ? '#ef4444' : '#666'} />
+                  </View>
+                </View>
+              )}
+            />
+            {errors.email && (
+              <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-4">
+                {errors.email.message}
+              </Text>
+            )}
+          </View>
+        );
+      case 2:
+        return (
+          <View marginB-25 className='mt-2 mb-4'>
+            <Controller
+              control={control}
+              name="otp"
+              rules={{
+                required: "Kode OTP tidak boleh kosong",
+                minLength: {
+                  value: 6,
+                  message: "Kode OTP harus 6 digit"
+                },
+                maxLength: {
+                  value: 6,
+                  message: "Kode OTP harus 6 digit"
+                }
+              }}
+              render={({ field: { onChange, value } }) => (
+                <OTPInput
+                  length={6}
+                  value={value}
+                  onChange={onChange}
+                  hasError={!!errors.otp}
+                />
+              )}
+            />
+            {errors.otp && (
+              <Text className="text-red-500 font-poppins-regular text-sm text-center bottom-2 mt-2">
+                {errors.otp.message}
+              </Text>
+            )}
+          </View>
+        );
+      case 3:
+        return (
+          <>
+            <View marginB-25 className='mt-2'>
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: "Password baru tidak boleh kosong",
+                  minLength: {
+                    value: 8,
+                    message: "Password minimal 8 karakter"
+                  }
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <View>
+                    <TextField
+                      style={{ fontFamily: "Poppins-Regular" }}
+                      placeholder="Password Baru"
+                      secureTextEntry={!isPasswordVisible}
+                      placeholderTextColor="#999"
+                      enableErrors
+                      fieldStyle={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 45,
+                        borderRadius: 25,
+                        borderWidth: 1,
+                        borderColor: errors.password ? '#ef4444' : Colors.grey60,
+                        backgroundColor: '#f5f5f5',
+                      }}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                    <View style={{
+                      position: "absolute",
+                      left: 15,
+                      top: 15,
+                    }}>
+                      <Ionicons name="key" size={20} color={errors.password ? '#ef4444' : '#666'} />
+                    </View>
+                    <TouchableOpacity
+                      onPress={togglePasswordVisibility}
+                      style={{
+                        position: "absolute",
+                        right: 15,
+                        top: 15,
+                      }}
+                    >
+                      <Ionicons
+                        name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
+                        size={20}
+                        color="#666"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+              {errors.password && (
+                <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
+                  {errors.password.message}
+                </Text>
+              )}
+            </View>
+
+            <View marginB-25>
+              <Controller
+                control={control}
+                name="password_confirmation"
+                rules={{
+                  required: "Konfirmasi password tidak boleh kosong",
+                  validate: value => value === watch('password') || "Password tidak cocok"
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <View>
+                    <TextField
+                      style={{ fontFamily: "Poppins-Regular" }}
+                      placeholder="Konfirmasi Password Baru"
+                      secureTextEntry={!isConfirmPasswordVisible}
+                      placeholderTextColor="#999"
+                      enableErrors
+                      fieldStyle={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 45,
+                        borderRadius: 25,
+                        borderWidth: 1,
+                        borderColor: errors.password_confirmation ? '#ef4444' : Colors.grey60,
+                        backgroundColor: '#f5f5f5',
+                      }}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                    <View style={{
+                      position: "absolute",
+                      left: 15,
+                      top: 15,
+                    }}>
+                      <Ionicons name="key" size={20} color={errors.password_confirmation ? '#ef4444' : '#666'} />
+                    </View>
+                    <TouchableOpacity
+                      onPress={toggleConfirmPasswordVisibility}
+                      style={{
+                        position: "absolute" ,
+                        right: 15,
+                        top: 15,
+                      }}
+                    >
+                      <Ionicons
+                        name={isConfirmPasswordVisible ? "eye-outline" : "eye-off-outline"}
+                        size={20}
+                        color="#666"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+              {errors.password_confirmation && (
+                <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
+                  {errors.password_confirmation.message}
+                </Text>
+              )}
+            </View>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -223,212 +365,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
         </Text>
 
         <View style={{ width: '90%', alignSelf: 'center' }}>
-          <Animated.View
-          >
-            {step === 1 && (
-              <View marginB-25 className='mt-2'>
-                <Controller
-                  control={control}
-                  name="email"
-                  rules={{
-                    required: "Email tidak boleh kosong",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Email tidak valid"
-                    }
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <View>
-                      <TextField
-                        style={{ fontFamily: "Poppins-Regular" }}
-                        placeholder="Email"
-                        keyboardType="email-address"
-                        placeholderTextColor="#999"
-                        enableErrors
-                        fieldStyle={{
-                          paddingVertical: 12,
-                          paddingHorizontal: 45,
-                          borderRadius: 25,
-                          borderWidth: 1,
-                          borderColor: errors.email ? '#ef4444' : Colors.grey60,
-                          backgroundColor: '#f5f5f5',
-                        }}
-                        onChangeText={onChange}
-                        value={value}
-                      />
-                      <View style={{
-                        position: "absolute",
-                        left: 15,
-                        top: 15,
-                      }}>
-                        <Ionicons name="mail" size={20} color={errors.email ? '#ef4444' : '#666'} />
-                      </View>
-                    </View>
-                  )}
-                />
-                {errors.email && (
-                  <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-4">
-                    {errors.email.message}
-                  </Text>
-                )}
-              </View>
-            )}
-
-            {step === 2 && (
-              <View marginB-25 className='mt-2 mb-4'>
-                <Controller
-                  control={control}
-                  name="otp"
-                  rules={{
-                    required: "Kode OTP tidak boleh kosong",
-                    minLength: {
-                      value: 6,
-                      message: "Kode OTP harus 6 digit"
-                    },
-                    maxLength: {
-                      value: 6,
-                      message: "Kode OTP harus 6 digit"
-                    }
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <OTPInput
-                      length={6}
-                      value={value}
-                      onChange={onChange}
-                      hasError={!!errors.otp}
-                    />
-                  )}
-                />
-                {errors.otp && (
-                  <Text className="text-red-500 font-poppins-regular text-sm text-center bottom-2 mt-2">
-                    {errors.otp.message}
-                  </Text>
-                )}
-              </View>
-            )}
-
-            {step === 3 && (
-              <>
-                <View marginB-25 className='mt-2'>
-                  <Controller
-                    control={control}
-                    name="password"
-                    rules={{
-                      required: "Password baru tidak boleh kosong",
-                      minLength: {
-                        value: 8,
-                        message: "Password minimal 8 karakter"
-                      }
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                      <View>
-                        <TextField
-                          style={{ fontFamily: "Poppins-Regular" }}
-                          placeholder="Password Baru"
-                          secureTextEntry={!isPasswordVisible}
-                          placeholderTextColor="#999"
-                          enableErrors
-                          fieldStyle={{
-                            paddingVertical: 12,
-                            paddingHorizontal: 45,
-                            borderRadius: 25,
-                            borderWidth: 1,
-                            borderColor: errors.password ? '#ef4444' : Colors.grey60,
-                            backgroundColor: '#f5f5f5',
-                          }}
-                          onChangeText={onChange}
-                          value={value}
-                        />
-                        <View style={{
-                          position: "absolute",
-                          left: 15,
-                          top: 15,
-                        }}>
-                          <Ionicons name="key" size={20} color={errors.password ? '#ef4444' : '#666'} />
-                        </View>
-                        <TouchableOpacity
-                          onPress={togglePasswordVisibility}
-                          style={{
-                            position: "absolute",
-                            right: 15,
-                            top: 15,
-                          }}
-                        >
-                          <Ionicons
-                            name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-                            size={20}
-                            color="#666"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  />
-                  {errors.password && (
-                    <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
-                      {errors.password.message}
-                    </Text>
-                  )}
-                </View>
-
-                <View marginB-25>
-                  <Controller
-                    control={control}
-                    name="password_confirmation"
-                    rules={{
-                      required: "Konfirmasi password tidak boleh kosong",
-                      validate: value => value === watch('password') || "Password tidak cocok"
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                      <View>
-                        <TextField
-                          style={{ fontFamily: "Poppins-Regular" }}
-                          placeholder="Konfirmasi Password Baru"
-                          secureTextEntry={!isPasswordVisible}
-                          placeholderTextColor="#999"
-                          enableErrors
-                          fieldStyle={{
-                            paddingVertical: 12,
-                            paddingHorizontal: 45,
-                            borderRadius: 25,
-                            borderWidth: 1,
-                            borderColor: errors.password_confirmation ? '#ef4444' : Colors.grey60,
-                            backgroundColor: '#f5f5f5',
-                          }}
-                          onChangeText={onChange}
-                          value={value}
-                        />
-                        <View style={{
-                          position: "absolute",
-                          left: 15,
-                          top: 15,
-                        }}>
-                          <Ionicons name="key" size={20} color={errors.password_confirmation ? '#ef4444' : '#666'} />
-                        </View>
-                        <TouchableOpacity
-                          onPress={togglePasswordVisibility}
-                          style={{
-                            position: "absolute",
-                            right: 15,
-                            top: 15,
-                          }}
-                        >
-                          <Ionicons
-                            name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-                            size={20}
-                            color="#666"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  />
-                  {errors.password_confirmation && (
-                    <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
-                      {errors.password_confirmation.message}
-                    </Text>
-                  )}
-                </View>
-              </>
-            )}
+          <Animated.View>
+            {renderFormStep()}
           </Animated.View>
 
           <Button
@@ -469,17 +407,56 @@ const ForgotPasswordScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <SuccessModal
-        visible={successModalVisible}
-        onClose={() => setSuccessModalVisible(false)}
-        message={modalMessage}
-      />
+      {successModalVisible && (
+        <SuccessModal
+          isVisible={successModalVisible}
+          onClose={() => setSuccessModalVisible(false)}
+          message={modalMessage}
+        />
+      )}
 
-      <ErrorModal
-        visible={errorModalVisible}
-        onClose={() => setErrorModalVisible(false)}
-        message={modalMessage}
-      />
+      {errorModalVisible && (
+        <Modal
+          transparent
+          visible={errorModalVisible}
+          animationType='fade'
+        >
+          <View className="flex-1 bg-black/50 justify-center items-center">
+            <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
+              <View className="items-center">
+                <View className="w-60 h-60 mb-3">
+                  <Image
+                    source={
+                      errorType === 'otp'
+                        ? require('../../assets/image/otp-vector.png')
+                        : errorType === 'email'
+                          ? require('../../assets/image/already-vector.png')
+                          : require('../../assets/image/regis-vector.png')
+                    }
+                    className="w-full h-full object-contain"
+                  />
+                </View>
+                <Text className="font-poppins-medium text-xl text-gray-800 mb-2 text-center">
+                  {errorType === 'otp'
+                    ? 'Kode OTP Tidak Valid'
+                    : errorType === 'email'
+                      ? 'Email Tidak Terdaftar'
+                      : 'Terjadi Kesalahan'}
+                </Text>
+                <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
+                  {modalMessage}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setErrorModalVisible(false)}
+                className="bg-gray-200 py-3 rounded-full items-center"
+              >
+                <Text className="text-black font-poppins-medium text-sm">Tutup</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
