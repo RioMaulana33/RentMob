@@ -40,7 +40,7 @@ const WelcomeScreen = () => {
           </View>
         </View>
 
-        <View className="absolute bottom-8 left-0 right-0 px-5 pb-5">
+        <View className="absolute bottom-2 left-0 right-0 px-5 pb-5">
           <TouchableOpacity 
             onPress={() => navigation.navigate('Login')}
             style={{ borderRadius: 25 }}

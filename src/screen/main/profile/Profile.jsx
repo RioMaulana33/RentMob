@@ -181,6 +181,13 @@ const Profile = ({ navigation }) => {
             onPress={() => navigation.navigate("EditProfile")}
           />
           <MenuItem
+            icon="card"
+            title="Verifikasi KTP & SIM"
+            color="#0372f5"
+            onPress={() => navigation.navigate("VerifyDoc")}
+          />
+          
+          <MenuItem
             icon="key"
             title="Ganti Password"
             color="#0372f5"

@@ -26,7 +26,7 @@ const AuthNavigator = () => {
         name="Register" 
         component={RegisterScreen} 
         options={{
-          ...TransitionPresets.BottomSheetAndroid
+          ...TransitionPresets.SlideFromRightIOS
         }}
       />
       <Stack.Screen 

@@ -5,35 +5,37 @@ import axios from '../../libs/axios';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { TextField, Button, Colors } from "react-native-ui-lib";
 import AnimatedLottieView from 'lottie-react-native';
+import OTPInput from '../../components/OTPInput';
+
 
 const { width, height } = Dimensions.get('window');
 
 const SuccessModal = ({ visible, onClose, message }) => {
-  if (!visible) return null;  
+  if (!visible) return null;
 
   return (
     <Modal transparent visible={visible} animationType='fade'>
       <View className="flex-1 bg-black/50 justify-center items-center">
         <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
           <View className="items-center">
-            <View className="w-60 h-60 mb-3">   
+            <View className="w-60 h-60 mb-3">
               <AnimatedLottieView
-                 source={require('../../assets/lottie/check-animation.json')}
-                 autoPlay
-                 loop={false}
+                source={require('../../assets/lottie/check-animation.json')}
+                autoPlay
+                loop={false}
                 className="w-full h-full object-contain"
               />
             </View>
-            
+
             <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
               Berhasil
             </Text>
-            
+
             <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
               {message}
             </Text>
           </View>
-          
+
           <TouchableOpacity
             onPress={onClose}
             className="bg-gray-200 py-3 rounded-full items-center"
@@ -49,29 +51,29 @@ const SuccessModal = ({ visible, onClose, message }) => {
 };
 
 const ErrorModal = ({ visible, onClose, message }) => {
-  if (!visible) return null;  
+  if (!visible) return null;
 
   return (
     <Modal transparent visible={visible} animationType='fade'>
       <View className="flex-1 bg-black/50 justify-center items-center">
         <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
           <View className="items-center">
-            <View className="w-60 h-60 mb-3">   
+            <View className="w-60 h-60 mb-3">
               <Image
-                source={require('../../assets/image/already-vector.png')}
+                source={require('../../assets/image/regis-vector.png')}
                 className="w-full h-full object-contain"
               />
             </View>
-            
+
             <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
-              Gagal
+              Email tidak terdaftar
             </Text>
-            
+
             <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
-              {message}
+              Silahkan masukkan email yang terdaftar pada aplikasi
             </Text>
           </View>
-          
+
           <TouchableOpacity
             onPress={onClose}
             className="bg-gray-200 py-3 rounded-full items-center"
@@ -273,7 +275,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             )}
 
             {step === 2 && (
-              <View marginB-25 className='mt-2'>
+              <View marginB-25 className='mt-2 mb-4'>
                 <Controller
                   control={control}
                   name="otp"
@@ -289,37 +291,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     }
                   }}
                   render={({ field: { onChange, value } }) => (
-                    <View>
-                      <TextField
-                        style={{ fontFamily: "Poppins-Regular" }}
-                        placeholder="Masukkan kode OTP"
-                        keyboardType="number-pad"
-                        placeholderTextColor="#999"
-                        enableErrors
-                        maxLength={6}
-                        fieldStyle={{
-                          paddingVertical: 12,
-                          paddingHorizontal: 45,
-                          borderRadius: 25,
-                          borderWidth: 1,
-                          borderColor: errors.otp ? '#ef4444' : Colors.grey60,
-                          backgroundColor: '#f5f5f5',
-                        }}
-                        onChangeText={onChange}
-                        value={value}
-                      />
-                      <View style={{
-                        position: "absolute",
-                        left: 15,
-                        top: 15,
-                      }}>
-                        <Ionicons name="key" size={20} color={errors.otp ? '#ef4444' : '#666'} />
-                      </View>
-                    </View>
+                    <OTPInput
+                      length={6}
+                      value={value}
+                      onChange={onChange}
+                      hasError={!!errors.otp}
+                    />
                   )}
                 />
                 {errors.otp && (
-                  <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-4">
+                  <Text className="text-red-500 font-poppins-regular text-sm text-center bottom-2 mt-2">
                     {errors.otp.message}
                   </Text>
                 )}
@@ -363,7 +344,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                           left: 15,
                           top: 15,
                         }}>
-                          <Ionicons name="lock-closed" size={20} color={errors.password ? '#ef4444' : '#666'} />
+                          <Ionicons name="key" size={20} color={errors.password ? '#ef4444' : '#666'} />
                         </View>
                         <TouchableOpacity
                           onPress={togglePasswordVisibility}
@@ -383,7 +364,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     )}
                   />
                   {errors.password && (
-                    <Text className="text-red-500 font-poppins-regular text-sm ml-2 mt-1">
+                    <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
                       {errors.password.message}
                     </Text>
                   )}
@@ -421,7 +402,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                           left: 15,
                           top: 15,
                         }}>
-                          <Ionicons name="lock-closed" size={20} color={errors.password_confirmation ? '#ef4444' : '#666'} />
+                          <Ionicons name="key" size={20} color={errors.password_confirmation ? '#ef4444' : '#666'} />
                         </View>
                         <TouchableOpacity
                           onPress={togglePasswordVisibility}
@@ -441,66 +422,66 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     )}
                   />
                   {errors.password_confirmation && (
-                  <Text className="text-red-500 font-poppins-regular text-sm ml-2 mt-1">
-                  {errors.password_confirmation.message}
-                </Text>
-              )}
-            </View>
-          </>
-        )}
-      </Animated.View>
+                    <Text className="text-red-500 font-poppins-regular text-sm ml-2 bottom-2.5">
+                      {errors.password_confirmation.message}
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
+          </Animated.View>
 
-      <Button
-        label={step === 1 ? "Kirim OTP" : step === 2 ? "Verifikasi OTP" : "Reset Password"}
-        onPress={handleSubmit(
-          step === 1 ? handleSendOTP : 
-          step === 2 ? handleVerifyOTP : 
-          handleResetPassword
-        )}
-        style={{
-          height: 50,
-          borderRadius: 25,
-          backgroundColor: '#2563eb',
-        }}
-        labelStyle={{
-          fontFamily: 'Poppins-Medium',
-          fontSize: 16,
-        }}
-        disabled={isLoading}
-      >
-        {isLoading && (
-          <ActivityIndicator 
-            size="small" 
-            color="#fff" 
-            style={{ marginRight: 8 }} 
-          />
-        )}
-      </Button>
+          <Button
+            label={step === 1 ? "Kirim OTP" : step === 2 ? "Verifikasi OTP" : "Reset Password"}
+            onPress={handleSubmit(
+              step === 1 ? handleSendOTP :
+                step === 2 ? handleVerifyOTP :
+                  handleResetPassword
+            )}
+            style={{
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#2563eb',
+            }}
+            labelStyle={{
+              fontFamily: 'Poppins-Medium',
+              fontSize: 16,
+            }}
+            disabled={isLoading}
+          >
+            {isLoading && (
+              <ActivityIndicator
+                size="small"
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+            )}
+          </Button>
 
-      <TouchableOpacity 
-        onPress={() => navigation.goBack()}
-        className="mt-8"
-      >
-        <Text className="text-center font-poppins-semibold text-base text-gray-600">
-          Kembali ke halaman login
-        </Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="mt-8"
+          >
+            <Text className="text-center font-poppins-semibold text-base text-blue-400">
+              Kembali ke halaman login
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <SuccessModal
+        visible={successModalVisible}
+        onClose={() => setSuccessModalVisible(false)}
+        message={modalMessage}
+      />
+
+      <ErrorModal
+        visible={errorModalVisible}
+        onClose={() => setErrorModalVisible(false)}
+        message={modalMessage}
+      />
     </View>
-  </View>
-
-  <SuccessModal
-    visible={successModalVisible}
-    onClose={() => setSuccessModalVisible(false)}
-    message={modalMessage}
-  />
-
-  <ErrorModal
-    visible={errorModalVisible}
-    onClose={() => setErrorModalVisible(false)}
-    message={modalMessage}
-  />
-</View>
-);
+  );
 };
 
 export default ForgotPasswordScreen;

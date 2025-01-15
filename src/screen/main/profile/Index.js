@@ -5,6 +5,8 @@ import EditProfile from './EditProfile';
 import EditPassword from './EditPassword';
 import PusatBantuan from './PusatBantuan';
 import Hubungi from './Hubungi';
+import VerifyDoc from './VerifyDoc';
+import DocumentCamera from './DocumentCamera';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +19,14 @@ const ProfileNavigator = () => {
     >
       <Stack.Screen name="ProfileMain" component={Profile} />
       <Stack.Screen name="EditProfile" component={EditProfile} 
+        options={{
+                ...TransitionPresets.SlideFromRightIOS
+              }}  />
+      <Stack.Screen name="VerifyDoc" component={VerifyDoc} 
+        options={{
+                ...TransitionPresets.SlideFromRightIOS
+              }}  />
+      <Stack.Screen name="DocumentCamera" component={DocumentCamera} 
         options={{
                 ...TransitionPresets.SlideFromRightIOS
               }}  />

@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   ScrollView,
   Platform,
-  Dimensions
+  Dimensions,
+  PermissionsAndroid
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -54,6 +55,23 @@ const EditProfile = ({ navigation }) => {
   };
 
   const handleTakePhoto = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: "Camera Permission",
+          message: "App needs camera permission to take pictures",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("Camera permission denied");
+        return;
+      }
+    }
+  
     const options = {
       mediaType: 'photo',
       maxWidth: 800,
@@ -61,19 +79,21 @@ const EditProfile = ({ navigation }) => {
       quality: 0.8,
       saveToPhotos: true,
     };
-
+  
     try {
       const response = await ImagePicker.launchCamera(options);
       if (response.didCancel) return;
       
-      const source = response.assets[0];
-      setPhoto({
-        uri: source.uri,
-        type: source.type,
-        name: source.fileName || `photo.${source.type.split('/')[1]}`
-      });
-      setPhotoPreview(source.uri);
-      setPhotoModalVisible(false);
+      if (response.assets && response.assets.length > 0) {
+        const source = response.assets[0];
+        setPhoto({
+          uri: source.uri,
+          type: source.type,
+          name: source.fileName || `photo.${source.type.split('/')[1]}`
+        });
+        setPhotoPreview(source.uri);
+        setPhotoModalVisible(false);
+      }
     } catch (error) {
       console.error('Camera Error:', error);
     }

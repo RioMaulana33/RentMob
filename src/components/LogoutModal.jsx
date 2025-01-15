@@ -1,5 +1,5 @@
-import { Text, View, Modal, TouchableOpacity } from 'react-native';
-import React from 'react';
+import { Text, View, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
 import LottieView from 'lottie-react-native';
 
 export default function LogoutModal({
@@ -10,6 +10,17 @@ export default function LogoutModal({
   onConfirm,
   onCancel,
 }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal animationType="fade" transparent={true} visible={modalVisible}>
       <View className="flex-1 bg-black/50 justify-center items-center">
@@ -28,16 +39,27 @@ export default function LogoutModal({
           </View>
           <View className="mt-4 space-y-4">
             <TouchableOpacity
-              onPress={onConfirm}
-              className="bg-red-100 py-3.5 rounded-full">
-              <Text className="text-center text-red-500 font-poppins-semibold text-base">
-                Ya, Logout
-              </Text>
+              onPress={handleConfirm}
+              disabled={isLoading}
+              className={`${isLoading ? 'bg-red-50' : 'bg-red-100'} py-3.5 rounded-full`}>
+              {isLoading ? (
+                <View className="flex-row justify-center items-center">
+                  <ActivityIndicator size="small" color="#EF4444" />
+                  <Text className="text-red-500 font-poppins-semibold text-base ml-2">
+                    Logging out...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-center text-red-500 font-poppins-semibold text-base">
+                  Ya, Logout
+                </Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onCancel}
-              className="bg-gray-200 py-3.5 rounded-full mt-3">
-              <Text className="text-center text-black font-poppins-medium text-base">
+              disabled={isLoading}
+              className={`${isLoading ? 'bg-gray-100' : 'bg-gray-200'} py-3.5 rounded-full mt-3`}>
+              <Text className={`text-center ${isLoading ? 'text-gray-400' : 'text-black'} font-poppins-medium text-base`}>
                 Batal
               </Text>
             </TouchableOpacity>

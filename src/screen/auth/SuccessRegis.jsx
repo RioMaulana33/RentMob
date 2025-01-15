@@ -38,7 +38,7 @@ const SuccessRegis = () => {
         </Text>
       </View>
 
-      <View className="absolute bottom-10 w-full px-6">
+      <View className="absolute bottom-6 w-full px-6">
         <TouchableOpacity
           onPress={() => navigation.navigate('Login')}
           className="bg-white py-4 rounded-full flex-row justify-center items-center"

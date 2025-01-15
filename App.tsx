@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
 import {
@@ -31,6 +31,9 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import AuthNavigator from './src/screen/AuthNavigator';
 import BottomTabNavigator from './src/screen/BottomTabNavigator';
+import { Camera } from 'react-native-vision-camera';
+
+
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -49,6 +52,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+
 
 const Navigation = () => {
   const { data: user, isSuccess } = useUser();
@@ -96,6 +101,20 @@ function App(): React.JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  useEffect(() => {
+    const initializeCamera = async () => {
+      try {
+        console.log('Initializing camera...');
+        const permission = await Camera.requestCameraPermission();
+        console.log('Camera permission result:', permission);
+      } catch (error) {
+        console.error('Failed to initialize camera:', error);
+      }
+    };
+
+    initializeCamera();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
