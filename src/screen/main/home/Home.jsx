@@ -155,7 +155,7 @@ const Home = ({ navigation }) => {
   const handleCloseCarDetail = () => {
     setIsCarDetailsModalVisible(false);
     setTimeout(() => {
-      setSelectedCar(null);
+      setSelectedCar(null); 
     }, 500); // Sesuaikan dengan animationOutTiming
   };
 
@@ -165,12 +165,14 @@ const Home = ({ navigation }) => {
   };
 
   const handleRentCar = () => {
-    // Navigate to rental form with selected car's ID
     if (selectedCar) {
-      navigation.navigate("RentalForm", { carId: selectedCar.mobil.id });
+      navigation.navigate("RentalForm", { 
+        carId: selectedCar.mobil.id,
+        kotaId: selectedCar.kota.id  
+      });
       handleCloseCarDetail();
     }
-  };
+};
 
   const renderCityItem = ({ item }) => (
     <TouchableOpacity

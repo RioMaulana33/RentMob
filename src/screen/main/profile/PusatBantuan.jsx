@@ -37,8 +37,8 @@ const PusatBantuan = ({ navigation }) => {
       content: [
         "KTP asli yang masih berlaku",
         "SIM A aktif dan masih berlaku",
-        "Dokumen asli akan diverifikasi saat pengambilan mobil",
-        "Tidak dapat diwakilkan saat pengambilan"
+        "Dokumen asli akan diverifikasi petugas saat pengambilan mobil",
+        "Serahkan KTP ke petugas sebagai jaminan",
       ]
     },
     {

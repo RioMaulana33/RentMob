@@ -20,44 +20,31 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isPasswordVisible, setPasswordVisible] = React.useState(false);
   const [isConfirmPasswordVisible, setConfirmPasswordVisible] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(0);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
+    reset
   } = useForm();
 
-  const startShakeAnimation = () => {
-    shakeAnimation.setValue(0);
-    Animated.sequence([
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: -10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: -10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 0,
-        duration: 50,
-        useNativeDriver: true
-      })
-    ]).start();
-  };
+  React.useEffect(() => {
+    reset();
+  }, [step]);
+
+  React.useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prevCount) => prevCount - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
 
   const handleSendOTP = async (data) => {
     try {
@@ -68,12 +55,37 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setUserEmail(data.email);
       setModalMessage('Kode OTP telah dikirim ke email Anda');
       setSuccessModalVisible(true);
+      
+      setTimeout(() => {
+        setSuccessModalVisible(false);
+      }, 4000);
+      
       setStep(2);
+      setCountdown(60);
     } catch (error) {
       setErrorType('email');
       setModalMessage('Email tidak terdaftar pada aplikasi');
       setErrorModalVisible(true);
-      startShakeAnimation();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOTP = async () => {
+    try {
+      setIsLoading(true);
+      await axios.post('/auth/send-user-otp', {
+        email: userEmail
+      });
+      setModalMessage('Kode OTP baru telah dikirim ke email Anda');
+      setSuccessModalVisible(true);
+      setCountdown(60);
+      setTimeout(() => {
+        setSuccessModalVisible(false);
+      }, 4000);
+    } catch (error) {
+      setErrorModalVisible(true);
+      setModalMessage('Gagal mengirim ulang kode OTP');
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +105,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setErrorType('otp');
       setModalMessage('Kode OTP yang Anda masukkan salah');
       setErrorModalVisible(true);
-      startShakeAnimation();
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +127,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setErrorType('default');
       setModalMessage(error.response?.data?.message || 'Gagal mereset password');
       setErrorModalVisible(true);
-      startShakeAnimation();
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +211,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
               render={({ field: { onChange, value } }) => (
                 <OTPInput
                   length={6}
-                  value={value}
                   onChange={onChange}
                   hasError={!!errors.otp}
                 />
@@ -315,7 +324,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     <TouchableOpacity
                       onPress={toggleConfirmPasswordVisibility}
                       style={{
-                        position: "absolute" ,
+                        position: "absolute",
                         right: 15,
                         top: 15,
                       }}
@@ -341,6 +350,38 @@ const ForgotPasswordScreen = ({ navigation }) => {
         return null;
     }
   };
+
+  const renderMainButton = () => {
+    return (
+      <Button
+        label={step === 1 ? "Kirim OTP" : step === 2 ? "Verifikasi OTP" : "Reset Password"}
+        onPress={handleSubmit(
+          step === 1 ? handleSendOTP :
+            step === 2 ? handleVerifyOTP :
+              handleResetPassword
+        )}
+        style={{
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: '#2563eb',
+        }}
+        labelStyle={{
+          fontFamily: 'Poppins-Medium',
+          fontSize: 16,
+        }}
+        disabled={isLoading}
+      >
+        {isLoading && (
+          <ActivityIndicator
+            size="small"
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+        )}
+      </Button>
+    );
+  };
+
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -369,41 +410,38 @@ const ForgotPasswordScreen = ({ navigation }) => {
             {renderFormStep()}
           </Animated.View>
 
-          <Button
-            label={step === 1 ? "Kirim OTP" : step === 2 ? "Verifikasi OTP" : "Reset Password"}
-            onPress={handleSubmit(
-              step === 1 ? handleSendOTP :
-                step === 2 ? handleVerifyOTP :
-                  handleResetPassword
-            )}
-            style={{
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: '#2563eb',
-            }}
-            labelStyle={{
-              fontFamily: 'Poppins-Medium',
-              fontSize: 16,
-            }}
-            disabled={isLoading}
-          >
-            {isLoading && (
-              <ActivityIndicator
-                size="small"
-                color="#fff"
-                style={{ marginRight: 8 }}
-              />
-            )}
-          </Button>
+          {renderMainButton()}
 
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mt-8"
-          >
-            <Text className="text-center font-poppins-semibold text-base text-blue-400">
-              Kembali ke halaman login
-            </Text>
-          </TouchableOpacity>
+          {step === 2 && (
+            <View className="flex-row justify-center items-center mt-6">
+              <TouchableOpacity
+                onPress={resendOTP}
+                disabled={countdown > 0 || isLoading}
+                className={`${countdown > 0 ? 'opacity-50' : ''}`}
+              >
+                <Text className="text-blue-500 font-poppins-medium">
+                  Kirim Ulang Kode OTP
+                </Text>
+              </TouchableOpacity>
+              {countdown > 0 && (
+                <Text className="text-gray-500 font-poppins-regular ml-2">
+                  ({countdown}s)
+                </Text>
+              )}
+            </View>
+          )}
+
+
+          {(step === 1) && (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="mt-8"
+            >
+              <Text className="text-center font-poppins-semibold text-base text-blue-400">
+                Kembali ke halaman login
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -430,8 +468,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
                       errorType === 'otp'
                         ? require('../../assets/image/otp-vector.png')
                         : errorType === 'email'
-                          ? require('../../assets/image/already-vector.png')
-                          : require('../../assets/image/regis-vector.png')
+                          ? require('../../assets/image/regis-vector.png')
+                          : require('../../assets/image/already-vector.png')
                     }
                     className="w-full h-full object-contain"
                   />

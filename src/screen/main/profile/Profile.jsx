@@ -180,12 +180,12 @@ const Profile = ({ navigation }) => {
             color="#0372f5"
             onPress={() => navigation.navigate("EditProfile")}
           />
-          <MenuItem
+          {/* <MenuItem
             icon="card"
             title="Verifikasi KTP & SIM"
             color="#0372f5"
             onPress={() => navigation.navigate("VerifyDoc")}
-          />
+          /> */}
           
           <MenuItem
             icon="key"

@@ -76,15 +76,13 @@ export const SuccessModal = ({ isVisible, message, onClose, autoClose = true }) 
     <Modal transparent visible={isVisible} animationType='fade'>
       <View className="flex-1 bg-black/50 justify-center items-center">
         <View className="bg-white rounded-2xl p-6 w-10/12 max-w-md shadow-lg items-center">
-          <LottieView
-            source={require('../assets/lottie/check-animation.json')}
-            autoPlay
-            loop={false}
-            style={{
-              width: width * 0.6,
-              height: width * 0.6,
-            }}
-          />
+          <View className="w-60 h-60 mb-3">
+            <Image
+              source={require('../assets/image/confirmed-vector.png')}
+              className="w-full h-full object-contain"
+            />
+          </View>
+
           <Text className="text-xl text-gray-800 font-poppins-semibold mb-2 text-center">
             Berhasil!
           </Text>
