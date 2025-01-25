@@ -74,7 +74,11 @@ const RentalForm = ({ route, navigation }) => {
         email: '',
         no_hp: '',
         tanggal_mulai: new Date(),
-        tanggal_selesai: new Date(),
+        tanggal_selesai: (() => {
+            const nextDay = new Date();
+            nextDay.setDate(nextDay.getDate() + 1);
+            return nextDay;
+        })(),
         jam_mulai: new Date(),
         delivery_id: '',
         rental_option: '',
@@ -246,46 +250,6 @@ const RentalForm = ({ route, navigation }) => {
         </View>
     );
 
-    const AddressInput = ({ value, onChange }) => (
-        <View className="mt-6">
-            <Text className="text-gray-700 font-poppins-medium mb-2">Alamat Pengantaran</Text>
-            <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <View className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                    <View className="flex-row items-center">
-                        <MaterialIcon name="map-marker" size={20} color="#0255d6" />
-                        <Text className="text-gray-600 font-poppins-medium ml-2">
-                            Lokasi Pengantaran
-                        </Text>
-                    </View>
-                </View>
-                <TextInput
-                    className="px-4 py-4 text-gray-800 font-poppins-regular"
-                    placeholder="Masukkan alamat lengkap pengantaran..."
-                    placeholderTextColor={"#64748b"}
-                    multiline={true}
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    blurOnSubmit={false}
-                    style={{
-                        minHeight: 100,
-                        maxHeight: 150
-                    }}
-                />
-                <View className="px-4 py-3 bg-blue-50">
-                    <View className="flex-row items-start">
-                        <MaterialIcon name="information" size={18} color="#0255d6" />
-                        <Text className="text-blue-600 font-poppins-regular text-xs ml-2 flex-1">
-                            Pastikan alamat yang Anda masukkan lengkap dan akurat untuk memudahkan proses pengantaran.
-                        </Text>
-                    </View>
-                </View>
-            </View>
-        </View>
-    );
-
     if (loading) {
         return (
             <View className="flex-1 justify-center items-center">
@@ -322,8 +286,11 @@ const RentalForm = ({ route, navigation }) => {
                 </View>
             </LinearGradient>
 
-            <ScrollView className="flex-1 px-5 pt-5"
+            <ScrollView
+                className="flex-1 px-5 pt-5"
                 contentContainerStyle={{ paddingBottom: 140 }}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
             >
                 {/* Car Info Card */}
                 <View
@@ -453,10 +420,36 @@ const RentalForm = ({ route, navigation }) => {
 
                 {/* Alamat Pengantaran */}
                 {formData.delivery_id === 2 && (
-                    <AddressInput
-                        value={formData.alamat_pengantaran}
-                        onChange={(text) => setFormData(prev => ({ ...prev, alamat_pengantaran: text }))}
-                    />
+                    <View className="mt-6">
+                        <Text className="text-gray-700 font-poppins-medium mb-2">Alamat Pengantaran</Text>
+                        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <TextInput
+                                className="px-4 py-4 text-gray-800 font-poppins-regular"
+                                placeholder="Masukkan alamat lengkap pengantaran..."
+                                placeholderTextColor="#64748b"
+                                multiline={true}
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                                value={formData.alamat_pengantaran}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, alamat_pengantaran: text }))}
+                                style={{
+                                    minHeight: 100,
+                                    maxHeight: 150,
+                                    borderWidth: 1,
+                                    borderColor: '#e5e7eb',
+                                    borderRadius: 10
+                                }}
+                                keyboardDismissMode="none"
+                                keyboardShouldPersistTaps="handled"
+                            />
+                            <View className="px-4 py-2 bg-blue-50 flex-row items-center">
+                                <MaterialIcon name="information-outline" size={18} color="#0255d6" />
+                                <Text className="text-blue-600 font-poppins-regular text-xs ml-2 flex-1">
+                                    Pastikan alamat akurat untuk memudahkan pengantaran
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
                 )}
 
                 {/* No Cancellation Notice */}
@@ -594,6 +587,7 @@ const RentalForm = ({ route, navigation }) => {
                 onClose={() => setShowTimePicker(false)}
                 is24Hour={true}
                 minuteInterval={30}
+                selectedDate={formData.tanggal_mulai} // Pass the selected start date
             />
         </View >
     );

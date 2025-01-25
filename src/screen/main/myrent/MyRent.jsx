@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, Image } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from '../../../libs/axios';
+import MyRentSkeletonLoader from '../../../components/MyRentSkeletonLoader'; // Import the skeleton loader
 
-const MyRent = () => {
+const MyRent = ({ navigation }) => {
   const [filterStatus, setFilterStatus] = useState('-');
   const [rentalHistory, setRentalHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const formatRupiah = (number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -18,8 +20,13 @@ const MyRent = () => {
     }).format(number);
   };
 
-  const fetchRentalHistory = async () => {
-    setIsLoading(true);
+  const fetchRentalHistory = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    
     try {
       const response = await axios.post('/penyewaan/history', {
         status: filterStatus
@@ -28,13 +35,21 @@ const MyRent = () => {
     } catch (error) {
       console.error('Error fetching rental history:', error);
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchRentalHistory();
   }, [filterStatus]);
+
+  const onRefresh = () => {
+    fetchRentalHistory(true);
+  };
 
   const getStatusStyle = (status) => {
     switch (status.toLowerCase()) {
@@ -64,7 +79,10 @@ const MyRent = () => {
   const renderItem = ({ item }) => {
     const statusStyle = getStatusStyle(item.status);
     return (
-      <View className="bg-white rounded-xl p-4 mx-5 mb-4 shadow-md">
+      <TouchableOpacity 
+      onPress={() => navigation.navigate('RentalTracking', { item })}
+      className="bg-white rounded-xl p-4 mx-5 mb-4 shadow-md"
+    >
         <View className="flex-row justify-between items-center mb-2">
           <View>
             <Text className="text-black text-lg font-poppins-semibold">
@@ -96,7 +114,7 @@ const MyRent = () => {
             </Text>
           </View>
         </View>
-      </View>
+        </TouchableOpacity>
     );
   };
 
@@ -152,7 +170,7 @@ const MyRent = () => {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color="#0255d6" className="mt-4" />
+          <MyRentSkeletonLoader />
         ) : (
           <FlatList
             data={rentalHistory}
@@ -161,6 +179,14 @@ const MyRent = () => {
             contentContainerStyle={{ paddingTop: 20, paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={EmptyStateComponent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#0255d6']}
+                tintColor="#0255d6"
+              />
+            }
           />
         )}
       </View>

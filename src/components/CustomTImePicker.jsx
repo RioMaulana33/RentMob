@@ -50,26 +50,28 @@ const CustomTimePicker = ({
 
   // Fungsi untuk mengecek apakah waktu valid berdasarkan aturan
   const isTimeValid = (time) => {
+    // If the selected date is not today, all times are valid
+    if (!isToday(selectedDate)) {
+      return true;
+    }
+    
     const hours = time.getHours();
     const minutes = time.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
     
-    // Jam 1 malam (01:00) hingga jam 4:30 tidak tersedia
-    if (timeInMinutes >= 60 && timeInMinutes < 270) { // 01:00 - 04:30
+    // Jam 1 malam (01:00) hingga jam 4:30 tidak tersedia hanya untuk hari ini
+    if (timeInMinutes >= 60 && timeInMinutes < 270) {
       return false;
     }
-
-    // Jika tanggal yang dipilih adalah hari ini
-    if (isToday(selectedDate)) {
-      const now = new Date();
-      const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-      
-      // Waktu yang sudah lewat tidak bisa dipilih
-      if (timeInMinutes < currentTimeInMinutes) {
-        return false;
-      }
+  
+    const now = new Date();
+    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Waktu yang sudah lewat tidak bisa dipilih
+    if (timeInMinutes < currentTimeInMinutes) {
+      return false;
     }
-
+  
     return true;
   };
 
