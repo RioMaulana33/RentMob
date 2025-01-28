@@ -1,6 +1,7 @@
 import { Text, View, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
 import LottieView from 'lottie-react-native';
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 export default function LogoutModal({
   url,
@@ -50,9 +51,12 @@ export default function LogoutModal({
                   </Text>
                 </View>
               ) : (
-                <Text className="text-center text-red-500 font-poppins-semibold text-base">
-                  Ya, Logout
-                </Text>
+                <View className="flex-row justify-center items-center">
+                  <Ionicons name="log-out-outline" size={20} color="#EF4444" style={{ marginRight: 8 }} />
+                  <Text className="text-center text-red-500 font-poppins-semibold text-base">
+                    Ya, Logout
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
             <TouchableOpacity

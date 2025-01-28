@@ -25,7 +25,7 @@ function TabBar({ state, navigation }) {
       case 'Home':
         return 'home-outline';
       case 'MyRent':
-        return 'key-outline';
+        return 'reader-outline';
       case 'Favorite':
         return 'heart-outline';
       case 'Profile':

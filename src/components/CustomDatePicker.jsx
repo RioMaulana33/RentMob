@@ -25,13 +25,18 @@ const CustomDatePicker = ({
   minimumDate,
   maximumDate
 }) => {
-  const currentYear = new Date().getFullYear(); // Get current year
+  const currentYear = new Date().getFullYear();
   const [selectedDate, setSelectedDate] = useState(value);
+  const [tempSelectedDate, setTempSelectedDate] = useState(value);
   const [currentMonth, setCurrentMonth] = useState(value.getMonth());
   const [slideAnim] = useState(new Animated.Value(SCREEN_HEIGHT));
 
   useEffect(() => {
     if (visible) {
+      // Reset temporary selection when modal opens
+      setTempSelectedDate(value);
+      setSelectedDate(value);
+      setCurrentMonth(value.getMonth());
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -47,12 +52,22 @@ const CustomDatePicker = ({
     }
   }, [visible]);
 
+  const isSameDay = (date1, date2) => {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+  };
+
+  const stripTime = (date) => {
+    const newDate = new Date(date);
+    newDate.setHours(0, 0, 0, 0);
+    return newDate;
+  };
+
   const isSelectedDate = (day) => {
     if (!day.current) return false;
     const date = new Date(currentYear, currentMonth, day.day);
-    return date.getDate() === selectedDate.getDate() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getFullYear() === selectedDate.getFullYear();
+    return isSameDay(date, tempSelectedDate);
   };
 
   const navigateMonth = (direction) => {
@@ -74,7 +89,15 @@ const CustomDatePicker = ({
   const handleDateSelect = (day) => {
     if (day.disabled || !day.current) return;
     const newDate = new Date(currentYear, currentMonth, day.day);
-    setSelectedDate(newDate);
+    setTempSelectedDate(newDate); // Update temporary selection
+  };
+
+  const handleConfirm = () => {
+    setSelectedDate(tempSelectedDate);
+    if (onChange) {
+      onChange(tempSelectedDate);
+    }
+    onClose();
   };
 
   const generateCalendarDays = () => {
@@ -82,9 +105,13 @@ const CustomDatePicker = ({
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const days = [];
 
-    // Previous month days
+    const today = stripTime(new Date());
+    const minDate = minimumDate ? stripTime(minimumDate) : null;
+    const maxDate = maximumDate ? stripTime(maximumDate) : null;
+
     const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
     for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+      const date = new Date(currentYear, currentMonth - 1, prevMonthDays - i);
       days.push({
         day: prevMonthDays - i,
         disabled: true,
@@ -92,18 +119,27 @@ const CustomDatePicker = ({
       });
     }
 
-    // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(currentYear, currentMonth, i);
+      const currentDate = new Date(currentYear, currentMonth, i);
+      currentDate.setHours(0, 0, 0, 0);
+
+      let isDisabled = false;
+
+      if (minDate) {
+        isDisabled = currentDate < minDate;
+      }
+
+      if (!isDisabled && maxDate) {
+        isDisabled = currentDate > maxDate;
+      }
+
       days.push({
         day: i,
-        disabled: (minimumDate && date < minimumDate) || 
-                 (maximumDate && date > maximumDate),
+        disabled: isDisabled,
         current: true
       });
     }
 
-    // Next month days
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       days.push({
@@ -132,7 +168,6 @@ const CustomDatePicker = ({
             }
           ]}
         >
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigateMonth('prev')}>
               <MaterialIcon name="chevron-left" size={24} color="#1a1a1a" />
@@ -159,9 +194,7 @@ const CustomDatePicker = ({
             </TouchableOpacity>
           </View>
 
-          {/* Calendar Grid */}
           <View style={styles.calendar}>
-            {/* Day headers */}
             <View style={styles.weekDays}>
               {DAYS.map(day => (
                 <View key={day} style={styles.weekDayContainer}>
@@ -170,7 +203,6 @@ const CustomDatePicker = ({
               ))}
             </View>
 
-            {/* Calendar days */}
             <View style={styles.daysGrid}>
               {generateCalendarDays().map((day, index) => (
                 <TouchableOpacity
@@ -196,7 +228,6 @@ const CustomDatePicker = ({
             </View>
           </View>
 
-          {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -206,10 +237,7 @@ const CustomDatePicker = ({
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.confirmButton}
-              onPress={() => {
-                onChange(selectedDate);
-                onClose();
-              }}
+              onPress={handleConfirm}
             >
               <Text style={styles.confirmButtonText}>OK</Text>
             </TouchableOpacity>

@@ -1,7 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Dimensions } from 'react-native';
+import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import LinearGradient from 'react-native-linear-gradient';
+
+const ShimmerPlaceholder = createShimmerPlaceholder(LinearGradient);
 
 const MyRentSkeletonLoader = () => {
+  const screenWidth = Dimensions.get('window').width;
   const skeletonItems = Array(5).fill(0);
 
   const shadowStyle = {
@@ -13,34 +18,86 @@ const MyRentSkeletonLoader = () => {
   };
 
   return (
-    <>
+    <View className="px-5">
       {skeletonItems.map((_, index) => (
         <View 
           key={index}
-          className="bg-white rounded-xl p-4 mx-5 mb-4 shadow-md"
+          className="bg-white rounded-xl p-4 mb-4"
           style={shadowStyle}
         >
           <View className="flex-row justify-between items-center mb-2">
-            <View>
-              <View className="h-5 bg-gray-200 rounded-md w-3/4 mb-2" />
+            <View className="flex-1">
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 20, 
+                  borderRadius: 10,
+                  marginBottom: 8,
+                  width: screenWidth * 0.6 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
               <View className="border-b border-gray-200 my-3"/>
-              <View className="h-4 bg-gray-200 rounded-md w-1/2" />
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 16, 
+                  borderRadius: 8,
+                  width: screenWidth * 0.4 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
             </View>
           </View>
           <View className="flex-row justify-between items-center">
             <View>
-              <View className="h-4 bg-gray-200 rounded-md w-16 mb-1" />
-              <View className="h-5 bg-gray-200 rounded-md w-24" />
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 16, 
+                  borderRadius: 8,
+                  marginBottom: 4,
+                  width: 80 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 20, 
+                  borderRadius: 10,
+                  width: 100 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
             </View>
             <View>
-              <View className="h-4 bg-gray-200 rounded-md w-16 mb-1" />
-              <View className="h-5 bg-gray-200 rounded-md w-24" />
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 16, 
+                  borderRadius: 8,
+                  marginBottom: 4,
+                  width: 80 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
+              <ShimmerPlaceholder
+                style={{ 
+                  height: 20, 
+                  borderRadius: 10,
+                  width: 100 
+                }}
+                shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+              />
             </View>
-            <View className="h-8 w-20 bg-gray-200 rounded-full" />
+            <ShimmerPlaceholder
+              style={{ 
+                height: 32, 
+                borderRadius: 16,
+                width: 90 
+              }}
+              shimmerColors={['#e1e1e1', '#f0f0f0', '#e1e1e1']}
+            />
           </View>
         </View>
       ))}
-    </>
+    </View>
   );
 };
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, Image, SafeAreaView } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from '../../../libs/axios';
-import MyRentSkeletonLoader from '../../../components/MyRentSkeletonLoader'; // Import the skeleton loader
+import MyRentSkeletonLoader from '../../../components/MyRentSkeletonLoader';
 
 const MyRent = ({ navigation }) => {
   const [filterStatus, setFilterStatus] = useState('-');
@@ -85,7 +85,7 @@ const MyRent = ({ navigation }) => {
     >
         <View className="flex-row justify-between items-center mb-2">
           <View>
-            <Text className="text-black text-lg font-poppins-semibold">
+            <Text className="text-black text-base font-poppins-semibold">
               {item.mobil?.merk}  -  {item.kota?.nama}
             </Text>
             <View className="border-b border-gray-200 my-3"/>
@@ -99,12 +99,12 @@ const MyRent = ({ navigation }) => {
         </View>
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-gray-500 font-poppins-regular">Kode:</Text>
-            <Text className="text-black font-poppins-medium">{item.kode_penyewaan}</Text>
+            <Text className="text-gray-500 font-poppins-regular text-[13px]">Kode:</Text>
+            <Text className="text-black font-poppins-medium text-sm">{item.kode_penyewaan}</Text>
           </View>
           <View>
-            <Text className="text-gray-500 font-poppins-regular">Total:</Text>
-            <Text className="text-black font-poppins-medium">
+            <Text className="text-gray-500 font-poppins-regular text-[13px]">Total:</Text>
+            <Text className="text-black font-poppins-medium text-sm">
               {formatRupiah(item.total_biaya)}
             </Text>
           </View>
@@ -134,7 +134,7 @@ const MyRent = ({ navigation }) => {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <LinearGradient colors={['#0255d6', '#0372f5']} className="h-24 relative">
         <View className="absolute bottom-[-30px] left-0 right-0 h-16 bg-gray-50 rounded-t-3xl" />
       </LinearGradient>
@@ -176,7 +176,10 @@ const MyRent = ({ navigation }) => {
             data={rentalHistory}
             renderItem={renderItem}
             keyExtractor={(item) => item.uuid}
-            contentContainerStyle={{ paddingTop: 20, paddingBottom: 20 }}
+            contentContainerStyle={{ 
+              paddingTop: 20, 
+              paddingBottom: 100 // Increased bottom padding to prevent tab bar overlap
+            }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={EmptyStateComponent}
             refreshControl={
@@ -190,7 +193,7 @@ const MyRent = ({ navigation }) => {
           />
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

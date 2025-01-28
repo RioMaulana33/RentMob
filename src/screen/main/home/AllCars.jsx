@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from 'react-native-modal';
 import axios from '../../../libs/axios';
+import CarLoader from '../../../components/CarLoader'; 
 
 const { height } = Dimensions.get('window');
 
@@ -144,7 +145,7 @@ const AllCars = ({ route, navigation }) => {
             </View>
 
             {isLoading ? (
-                <ActivityIndicator size="large" color="#0255d6" className="mt-4" />
+                <CarLoader /> // Replace ActivityIndicator with CarLoader
             ) : (
                 <FlatList
                     data={filteredCars}

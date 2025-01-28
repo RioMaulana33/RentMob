@@ -119,8 +119,8 @@ const Home = ({ navigation }) => {
     car.mobil.model.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const displayedCars = filteredCars.slice(0, 5);
-  const hasMoreCars = filteredCars.length > 5;
+  const displayedCars = filteredCars.slice(0, 10);
+  const hasMoreCars = filteredCars.length > 10;
 
   const handleSeeMore = () => {
     navigation.navigate('AllCars', {
@@ -411,7 +411,7 @@ const Home = ({ navigation }) => {
             <Text className="text-lg font-poppins-semibold text-gray-800">Mobil Tersedia</Text>
             {hasMoreCars && (
               <TouchableOpacity onPress={handleSeeMore}>
-                <Text className="text-blue-500 font-poppins-medium">Lihat Lainnya</Text>
+                <Text className="text-blue-500 font-poppins-medium">Lihat Semua</Text>
               </TouchableOpacity>
             )}
           </View>

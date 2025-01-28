@@ -16,13 +16,13 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CustomTimePicker = ({
   visible,
   onClose,
-  value = new Date(),
+  value = null,
   onChange,
   is24Hour = true,
   minuteInterval = 30,
-  selectedDate = new Date() // Tambah prop untuk tanggal yang dipilih
+  selectedDate = new Date()
 }) => {
-  const [selectedTime, setSelectedTime] = useState(value);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [slideAnim] = useState(new Animated.Value(SCREEN_HEIGHT));
 
   useEffect(() => {
@@ -42,45 +42,50 @@ const CustomTimePicker = ({
     }
   }, [visible]);
 
-  // Fungsi yang sebelumnya hilang
+  useEffect(() => {
+    if (visible) {
+      setSelectedTime(value);
+    }
+  }, [visible, value]);
+
   const isTimeEqual = (time1, time2) => {
+    if (!time1 || !time2) return false;
     return time1.getHours() === time2.getHours() && 
            time1.getMinutes() === time2.getMinutes();
   };
 
-  // Fungsi untuk mengecek apakah waktu valid berdasarkan aturan
-  const isTimeValid = (time) => {
-    // If the selected date is not today, all times are valid
-    if (!isToday(selectedDate)) {
-      return true;
-    }
-    
-    const hours = time.getHours();
-    const minutes = time.getMinutes();
-    const timeInMinutes = hours * 60 + minutes;
-    
-    // Jam 1 malam (01:00) hingga jam 4:30 tidak tersedia hanya untuk hari ini
-    if (timeInMinutes >= 60 && timeInMinutes < 270) {
-      return false;
-    }
-  
-    const now = new Date();
-    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-    
-    // Waktu yang sudah lewat tidak bisa dipilih
-    if (timeInMinutes < currentTimeInMinutes) {
-      return false;
-    }
-  
-    return true;
-  };
-
-  // Helper function untuk mengecek apakah tanggal yang dipilih adalah hari ini
   const isToday = (date) => {
     const today = new Date();
     return date.getDate() === today.getDate() &&
            date.getMonth() === today.getMonth() &&
            date.getFullYear() === today.getFullYear();
+  };
+
+  const isTimeValid = (time) => {
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+    const timeInMinutes = hours * 60 + minutes;
+    
+    // Check operational hours (4:30 - 23:30) for all days
+    const operationalStartTime = 4 * 60 + 30; // 4:30
+    const operationalEndTime = 23 * 60 + 30; // 23:30
+    
+    if (timeInMinutes < operationalStartTime || timeInMinutes > operationalEndTime) {
+      return false;
+    }
+
+    // Additional checks only for today's bookings
+    if (isToday(selectedDate)) {
+      const now = new Date();
+      const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+      
+      // Can't select past times for today
+      if (timeInMinutes <= currentTimeInMinutes) {
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   const generateTimeSlots = () => {
@@ -90,7 +95,6 @@ const CustomTimePicker = ({
         const time = new Date();
         time.setHours(hour, minute, 0);
         
-        // Hanya tambahkan slot waktu jika valid
         if (isTimeValid(time)) {
           const formattedHour = is24Hour ? hour : (hour % 12 || 12);
           const period = hour < 12 ? 'AM' : 'PM';
@@ -129,8 +133,10 @@ const CustomTimePicker = ({
   );
 
   const handleConfirm = () => {
-    onChange(selectedTime);
-    onClose();
+    if (selectedTime) {
+      onChange(selectedTime);
+      onClose();
+    }
   };
 
   return (
@@ -152,11 +158,11 @@ const CustomTimePicker = ({
           <View style={styles.header}>
             <Text style={styles.title}>Select Time</Text>
             <Text style={styles.selectedTimeDisplay}>
-              {selectedTime.toLocaleTimeString('id-ID', {
+              {selectedTime ? selectedTime.toLocaleTimeString('id-ID', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: !is24Hour
-              })}
+              }) : '--:--'}
             </Text>
           </View>
 
@@ -166,10 +172,6 @@ const CustomTimePicker = ({
               renderItem={renderTimeSlot}
               keyExtractor={(item) => item.display}
               showsVerticalScrollIndicator={false}
-              initialScrollOffset={
-                (selectedTime.getHours() * (60 / minuteInterval) + 
-                Math.floor(selectedTime.getMinutes() / minuteInterval)) * 56
-              }
               getItemLayout={(data, index) => ({
                 length: 56,
                 offset: 56 * index,
@@ -186,10 +188,11 @@ const CustomTimePicker = ({
               <Text style={styles.cancelButtonText}>Batal</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.confirmButton}
+              style={[styles.confirmButton, !selectedTime && styles.disabledButton]}
               onPress={handleConfirm}
+              disabled={!selectedTime}
             >
-              <Text style={styles.confirmButtonText}>OK</Text>
+              <Text style={[styles.confirmButtonText, !selectedTime && styles.disabledButtonText]}>OK</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -269,6 +272,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  disabledButton: {
+    opacity: 0.5,
+  },
   cancelButtonText: {
     color: '#666',
     fontSize: 14,
@@ -278,6 +284,9 @@ const styles = StyleSheet.create({
     color: '#0255d6',
     fontSize: 14,
     fontFamily: 'Poppins-Medium',
+  },
+  disabledButtonText: {
+    color: '#999',
   },
   disabledTimeSlot: {
     backgroundColor: '#f5f5f5',

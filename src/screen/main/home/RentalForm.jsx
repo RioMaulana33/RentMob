@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Platform, ActivityIndicator, } from 'react-native';
 import LinearGradient from "react-native-linear-gradient";
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -9,6 +9,7 @@ import CustomTimePicker from '../../../components/CustomTImePicker';
 import RentalOptionSection from '../../../components/RentalOptionSection';
 import axios from '../../../libs/axios';
 import FastImage from 'react-native-fast-image';
+import Modal from 'react-native-modal';
 
 const RenderDeliveryMethod = ({ method, selected, onSelect }) => (
     <TouchableOpacity
@@ -46,13 +47,89 @@ const RenderDeliveryMethod = ({ method, selected, onSelect }) => (
                 {method.id === 2 && (
                     <View className="flex-row items-center mt-2">
                         <Text className="text-gray-500 text-xs font-poppins-regular">
-                            <Text className='text-red-500'>*</Text> Biaya tambahan Rp 8.000
+                            <Text className='text-red-500'>*</Text> Terdapat biaya tambahan
                         </Text>
                     </View>
                 )}
             </View>
         </View>
     </TouchableOpacity>
+);
+
+const ValidationModal = ({ isVisible, onClose, errors }) => (
+    <Modal
+        isVisible={isVisible}
+        onBackdropPress={onClose}
+        onSwipeComplete={onClose}
+        swipeDirection={['down']}
+        style={{ justifyContent: 'flex-end', margin: 0 }}
+        animationInTiming={500}
+        animationOutTiming={500}
+        backdropTransitionInTiming={500}
+        backdropTransitionOutTiming={500}
+        backdropOpacity={0.5}
+    >
+        <View
+            style={{
+                backgroundColor: 'white',
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                paddingTop: 20,
+                paddingHorizontal: 20,
+                paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+            }}
+        >
+            {/* Drag Indicator */}
+            <View className="items-center -mt-3 mb-4">
+                <View className="w-12 h-1.5 rounded-full bg-gray-200" />
+            </View>
+
+            {/* Header */}
+            <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-xl font-poppins-semibold text-gray-900">
+                    Lengkapi Data
+                </Text>
+                <TouchableOpacity
+                    onPress={onClose}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                >
+                    <MaterialIcon name="close" size={24} color="black" />
+                </TouchableOpacity>
+            </View>
+
+            {/* Error List */}
+            <View className="space-y-6">
+                {Object.entries(errors).map(([key, value], index) => (
+                    value && (
+                        <View key={key} className="flex-row items-center p-4 ">
+                            <MaterialIcon name="alert-circle-outline" size={20} color="#ef4444" />
+                            <Text className="text-red-600 font-poppins-medium ml-3 flex-1">
+                                {key === 'alamat_pengantaran' && 'Alamat pengantaran belum diisi'}
+                                {key === 'delivery_id' && 'Metode pengantaran belum dipilih'}
+                                {key === 'rental_option' && 'Opsi rental belum dipilih'}
+                            </Text>
+                        </View>
+                    )
+                ))}
+            </View>
+
+            {/* Action Button */}
+            <TouchableOpacity
+                onPress={onClose}
+                className="mt-8"
+            >
+                <LinearGradient
+                    colors={["#0255d6", "#0372f5"]}
+                    className="py-4 rounded-2xl"
+                    style={{ borderRadius: 10 }}
+                >
+                    <Text className="text-white font-poppins-semibold text-center text-base">
+                        Mengerti
+                    </Text>
+                </LinearGradient>
+            </TouchableOpacity>
+        </View>
+    </Modal>
 );
 
 const RentalForm = ({ route, navigation }) => {
@@ -68,6 +145,53 @@ const RentalForm = ({ route, navigation }) => {
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
 
+    const [formErrors, setFormErrors] = useState({
+        alamat_pengantaran: false,
+        delivery_id: false,
+        rental_option: false
+    });
+
+    const [isValidationModalVisible, setIsValidationModalVisible] = useState(false);
+
+
+    const validateForm = () => {
+        let isValid = true;
+        const newErrors = {
+            alamat_pengantaran: false,
+            delivery_id: false,
+            rental_option: false
+        };
+
+        // Validate delivery method
+        if (!formData.delivery_id) {
+            newErrors.delivery_id = true;
+            isValid = false;
+        }
+
+        // Validate rental option
+        if (!formData.rental_option) {
+            newErrors.rental_option = true;
+            isValid = false;
+        }
+
+        // Validate address if delivery service is selected
+        if (formData.delivery_id === 2) {
+            if (!formData.alamat_pengantaran || formData.alamat_pengantaran.trim() === '') {
+                newErrors.alamat_pengantaran = true;
+                isValid = false;
+            }
+        }
+
+        setFormErrors(newErrors);
+
+        // Show validation modal if there are errors
+        if (!isValid) {
+            setIsValidationModalVisible(true);
+        }
+
+        return isValid;
+    };
+
     // Form state
     const [formData, setFormData] = useState({
         nama: '',
@@ -79,7 +203,7 @@ const RentalForm = ({ route, navigation }) => {
             nextDay.setDate(nextDay.getDate() + 1);
             return nextDay;
         })(),
-        jam_mulai: new Date(),
+        jam_mulai: null,
         delivery_id: '',
         rental_option: '',
         total_biaya: 0,
@@ -190,11 +314,14 @@ const RentalForm = ({ route, navigation }) => {
     };
 
     const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
         try {
             const formattedDates = {
                 tanggal_mulai: formData.tanggal_mulai.toISOString().split('T')[0],
                 tanggal_selesai: formData.tanggal_selesai.toISOString().split('T')[0],
-                // Format time as HH:mm:00
                 jam_mulai: formData.jam_mulai.toLocaleTimeString('en-US', {
                     hour12: false,
                     hour: '2-digit',
@@ -211,14 +338,19 @@ const RentalForm = ({ route, navigation }) => {
             };
 
             const response = await axios.post('/penyewaan/store', payload);
-            Alert.alert(
-                "Sukses",
-                "Pesanan berhasil dibuat",
-                [{ text: "OK", onPress: () => navigation.navigate('Home') }]
-            );
+
+            // Show success modal instead of alert
+            navigation.navigate('HomeMain', {
+                message: 'Pesanan berhasil dibuat',
+                onContinue: () => navigation.navigate('HomeMain')
+            });
         } catch (error) {
-            console.error('Error details:', error.response?.data || error);
-            Alert.alert("Error", error.response?.data?.message || "Gagal membuat pesanan");
+            // Show error modal instead of alert
+            setShowValidationModal(true);
+            setFormErrors({
+                ...formErrors,
+                submission: error.response?.data?.message || "Gagal membuat pesanan"
+            });
         }
     };
 
@@ -397,11 +529,14 @@ const RentalForm = ({ route, navigation }) => {
                             <View>
                                 <Text className="text-xs text-gray-500 font-poppins-regular mb-1">Waktu</Text>
                                 <Text className="text-gray-800 font-poppins-medium">
-                                    {formData.jam_mulai.toLocaleTimeString('id-ID', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false
-                                    })}
+                                    {formData.jam_mulai
+                                        ? formData.jam_mulai.toLocaleTimeString('id-ID', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: false
+                                        })
+                                        : '--:--'
+                                    }
                                 </Text>
                             </View>
                             <MaterialIcon name="clock-outline" size={20} color="#0255d6" />
@@ -421,22 +556,28 @@ const RentalForm = ({ route, navigation }) => {
                 {/* Alamat Pengantaran */}
                 {formData.delivery_id === 2 && (
                     <View className="mt-6">
-                        <Text className="text-gray-700 font-poppins-medium mb-2">Alamat Pengantaran</Text>
+                        <Text className="text-gray-700 font-poppins-medium mb-2">
+                            Alamat Pengantaran <Text className="text-red-500">*</Text>
+                        </Text>
                         <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             <TextInput
-                                className="px-4 py-4 text-gray-800 font-poppins-regular"
+                                className={`px-4 py-4 text-gray-800 font-poppins-regular ${formErrors.alamat_pengantaran ? 'border-2 border-red-500' : 'border border-gray-200'
+                                    }`}
                                 placeholder="Masukkan alamat lengkap pengantaran..."
                                 placeholderTextColor="#64748b"
                                 multiline={true}
                                 numberOfLines={4}
                                 textAlignVertical="top"
                                 value={formData.alamat_pengantaran}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, alamat_pengantaran: text }))}
+                                onChangeText={(text) => {
+                                    setFormData(prev => ({ ...prev, alamat_pengantaran: text }));
+                                    if (formErrors.alamat_pengantaran) {
+                                        setFormErrors(prev => ({ ...prev, alamat_pengantaran: false }));
+                                    }
+                                }}
                                 style={{
                                     minHeight: 100,
                                     maxHeight: 150,
-                                    borderWidth: 1,
-                                    borderColor: '#e5e7eb',
                                     borderRadius: 10
                                 }}
                                 keyboardDismissMode="none"
@@ -588,6 +729,12 @@ const RentalForm = ({ route, navigation }) => {
                 is24Hour={true}
                 minuteInterval={30}
                 selectedDate={formData.tanggal_mulai} // Pass the selected start date
+            />
+
+            <ValidationModal
+                isVisible={isValidationModalVisible}
+                onClose={() => setIsValidationModalVisible(false)}
+                errors={formErrors}
             />
         </View >
     );
