@@ -9,38 +9,58 @@ import { TextField, Button, Colors } from "react-native-ui-lib";
 
 const { width, height } = Dimensions.get('window');
 
-const ErrorModal = ({ visible, onClose }) => {
-  if (!visible) return null;  
+const ErrorModal = ({ visible, onClose, navigation }) => {
+  if (!visible) return null;
 
   return (
     <Modal transparent visible={visible} animationType='fade'>
       <View className="flex-1 bg-black/50 justify-center items-center">
-        <View className="bg-white rounded-2xl p-6 w-9/12 max-w-md shadow-lg">
+        <View className="bg-white rounded-2xl p-6 w-10/12 max-w-md shadow-lg">
           <View className="items-center">
-          <View className="w-60 h-60 mb-3">   
+            <View className="w-60 h-60 mb-3">
               <Image
                 source={require('../../assets/image/already-vector.png')}
                 className="w-full h-full object-contain"
               />
             </View>
-            
+
             <Text className="font-poppins-medium text-xl text-gray-800 mb-2">
-               Email/Password salah
+              Email/Password salah
             </Text>
-            
-            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-6">
+
+            <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-4">
               Pastikan data yang Anda isi sudah benar
             </Text>
+
+            <View className="w-full h-[1px] bg-gray-200 my-4" />
+
+            <View className="w-full items-center">
+              <Text className="font-poppins-regular text-sm text-gray-600 text-center mb-4">
+                Belum memiliki akun?
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  navigation.navigate('Register');
+                }}
+                className="bg-blue-500 w-full py-3 rounded-full items-center mb-3"
+              >
+                <Text className="text-white font-poppins-medium text-sm">
+                  Daftar Sekarang
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={onClose}
+                className="bg-gray-100 w-full py-3 rounded-full items-center"
+              >
+                <Text className="text-gray-700 font-poppins-medium text-sm">
+                  Coba Login Lagi
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          <TouchableOpacity
-            onPress={onClose}
-            className="bg-gray-200 py-3 rounded-full items-center"
-          >
-            <Text className="text-black font-poppins-medium text-sm">
-              Tutup
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -101,9 +121,9 @@ const LoginScreen = ({ navigation }) => {
     try {
       setIsLoading(true);
       const res = await axios.post("/auth/secure/login", data);
-      
+
       await AsyncStorage.setItem("@auth-token", res.data.token);
-      queryClient.invalidateQueries(["auth", "user"]);    
+      queryClient.invalidateQueries(["auth", "user"]);
     } catch (error) {
       console.error('Login error:', error.response?.data);
       startShakeAnimation();
@@ -168,7 +188,7 @@ const LoginScreen = ({ navigation }) => {
                       placeholderTextColor="#999"
                       enableErrors
                       fieldStyle={{
-                        paddingVertical: 12,                        
+                        paddingVertical: 12,
                         paddingHorizontal: 45,
                         borderRadius: 25,
                         borderWidth: 1,
@@ -277,10 +297,11 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </Animated.View>
 
-          <ErrorModal 
+          <ErrorModal
             visible={errorModalVisible}
             message={errorMessage}
             onClose={() => setErrorModalVisible(false)}
+            navigation={navigation}
           />
 
           <TouchableOpacity
@@ -295,10 +316,10 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <Button
-            label={ isLoading || "Login"}
+            label={isLoading || "Login"}
             labelStyle={{
               fontFamily: "Poppins-Medium",
-              color: 'white'  
+              color: 'white'
             }}
             backgroundColor={'#2563eb'}
             paddingV-14
@@ -308,17 +329,17 @@ const LoginScreen = ({ navigation }) => {
           >
             {isLoading && (
               <View style={{
-                position: 'absolute', 
-                top: 0, 
-                bottom: 0, 
-                left: 0, 
-                right: 0, 
-                justifyContent: 'center', 
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                justifyContent: 'center',
                 alignItems: 'center'
               }}>
-                <ActivityIndicator 
-                  color="white" 
-                  size="small" 
+                <ActivityIndicator
+                  color="white"
+                  size="small"
                 />
               </View>
             )}

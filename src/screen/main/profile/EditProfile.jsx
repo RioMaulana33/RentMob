@@ -246,7 +246,7 @@ const EditProfile = ({ navigation }) => {
       >
         <View className="px-4 py-3 flex-row items-center">
           <TouchableOpacity 
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('Profile', { screen: 'ProfileMain' })}
             className="p-2 -ml-2"
           >
             <Ionicons name="arrow-back" size={24} color="#374151" />

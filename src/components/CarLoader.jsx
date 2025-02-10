@@ -4,62 +4,60 @@ import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 
 const ShimmerPlaceholder = createShimmerPlaceholder(LinearGradient);
+const { width } = Dimensions.get('window');
 
 const CarLoader = () => {
-  const screenWidth = Dimensions.get('window').width;
-  const skeletonItems = Array(5).fill(0);
-
-  const shadowStyle = {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  };
+  const skeletonItems = Array(3).fill(0);
 
   return (
     <>
       {skeletonItems.map((_, index) => (
         <View 
           key={index}
-          className="flex-row bg-white rounded-xl p-4 mb-4"
-          style={shadowStyle}
+          className="bg-white rounded-xl p-4 mb-4 shadow-sm"
         >
+          {/* Image placeholder */}
           <ShimmerPlaceholder
             style={{ 
-              width: 96, 
-              height: 96, 
-              borderRadius: 8 
+              width: '100%',
+              height: 160,
+              borderRadius: 12,
+              marginBottom: 12
             }}
             shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
           />
           
-          <View className="ml-4 my-2.5 flex-1">
+          <View className="flex-row justify-between items-start">
+            {/* Left side content */}
+            <View>
+              {/* Car name placeholder */}
+              <ShimmerPlaceholder
+                style={{ 
+                  width: width * 0.4,
+                  height: 24,
+                  borderRadius: 4,
+                  marginBottom: 8
+                }}
+                shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
+              />
+              
+              {/* Location placeholder */}
+              <ShimmerPlaceholder
+                style={{ 
+                  width: width * 0.3,
+                  height: 16,
+                  borderRadius: 4
+                }}
+                shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
+              />
+            </View>
+
+            {/* Price placeholder */}
             <ShimmerPlaceholder
               style={{ 
-                height: 20, 
-                borderRadius: 4,
-                width: screenWidth * 0.5,
-                marginBottom: 8 
-              }}
-              shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
-            />
-            
-            <ShimmerPlaceholder
-              style={{ 
-                height: 16, 
-                borderRadius: 4,
-                width: screenWidth * 0.4,
-                marginBottom: 8 
-              }}
-              shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
-            />
-            
-            <ShimmerPlaceholder
-              style={{ 
-                height: 16, 
-                borderRadius: 4,
-                width: screenWidth * 0.3 
+                width: width * 0.25,
+                height: 20,
+                borderRadius: 4
               }}
               shimmerColors={['#e5e5e5', '#f0f0f0', '#e5e5e5']}
             />

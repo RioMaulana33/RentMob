@@ -178,7 +178,7 @@ const RegisterScreen = ({ navigation }) => {
       if (response.data.status) {
         setSuccessModalVisible(true);
         setSuccessMessage('Kode OTP baru telah dikirim ke email Anda');
-        setCountdown(60); 
+        setCountdown(60);
         setTimeout(() => {
           setSuccessModalVisible(false);
         }, 2000);
@@ -600,12 +600,14 @@ const RegisterScreen = ({ navigation }) => {
           />
         </View>
 
-        <View className="flex-row justify-center mt-10 top">
-          <Text className="text-[#7f7f7f] font-poppins-regular">Sudah Punya Akun?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text className="text-[#0ea5e9] font-poppins-semibold"> Login</Text>
-          </TouchableOpacity>
-        </View>
+        {phase === 1 && (
+          <View className="flex-row justify-center mt-10 top">
+            <Text className="text-[#7f7f7f] font-poppins-regular">Sudah Punya Akun?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text className="text-[#0ea5e9] font-poppins-semibold"> Login</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );

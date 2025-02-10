@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   View, 
   Text, 
   TextInput, 
   TouchableOpacity, 
-  ScrollView, 
-  Alert 
+  ScrollView
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,28 +13,38 @@ import SuccessModal from "../../../components/ProfileModal";
 
 const EditPassword = ({ navigation }) => {
   const [formData, setFormData] = useState({
+    old_password: "",
     password: "",
     password_confirmation: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState({
+    old: false,
+    new: false,
+    confirm: false
+  });
   const [errors, setErrors] = useState({
+    old_password: "",
     password: "",
     password_confirmation: ""
   });
 
   const queryClient = useQueryClient();
 
-
   const validateForm = () => {
     const newErrors = {};
     
+    if (!formData.old_password.trim()) {
+      newErrors.old_password = "Password lama harus diisi";
+    }
+
     if (!formData.password.trim()) {
-      newErrors.password = "Password harus diisi";
+      newErrors.password = "Password baru harus diisi";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password minimal 8 karakter";
+    } else if (formData.password === formData.old_password) {
+      newErrors.password = "Password baru tidak boleh sama dengan password lama";
     }
 
     if (!formData.password_confirmation.trim()) {
@@ -53,25 +62,96 @@ const EditPassword = ({ navigation }) => {
     
     setIsSubmitting(true);
     try {
-      const response = await axios.post("/auth/change-password", {
-        password: formData.password,
-        password_confirmation: formData.password_confirmation
-      });
+      const response = await axios.post("/auth/change-password", formData);
       
       if (response.data.status) {
         setShowSuccessModal(true);
         queryClient.invalidateQueries(["users"]);
-        navigation.goBack();
+        
+        setFormData({
+          old_password: "",
+          password: "",
+          password_confirmation: ""
+        });
+        
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
       }
     } catch (error) {
-      Alert.alert(
-        "Kesalahan",
-        error.response?.data?.message || "Gagal mengubah password"
-      );
+      // Handle specific error from backend for wrong old password
+      if (error.response?.data?.message === 'Password lama tidak sesuai') {
+        setErrors(prev => ({
+          ...prev,
+          old_password: "Password lama tidak sesuai"
+        }));
+      } else if (error.response?.data?.errors) {
+        // Handle other validation errors from backend
+        setErrors(prev => ({
+          ...prev,
+          ...error.response.data.errors
+        }));
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const renderPasswordInput = (field, label, placeholder, visibilityKey) => (
+    <View className="mb-8">
+      <Text className="font-poppins-medium text-[13px] text-gray-700 mb-2 ml-1">
+        {label}
+      </Text>
+      <View className="relative">
+        <View className="absolute left-3.5 z-10" style={{ top: 16 }}>
+          <Ionicons 
+            name="key" 
+            size={20} 
+            color={errors[field] ? '#ef4444' : '#6B7280'} 
+          />
+        </View>
+        <TextInput
+          value={formData[field]}
+          onChangeText={(value) => {
+            setFormData(prev => ({ ...prev, [field]: value }));
+            setErrors(prev => ({ ...prev, [field]: "" }));
+          }}
+          placeholder={placeholder}
+          maxLength={12}
+          placeholderTextColor="#9CA3AF"
+          secureTextEntry={!isPasswordVisible[visibilityKey]}
+          className={`bg-white pl-14 pr-12 py-3.5 rounded-xl text-[15px] font-poppins-medium 
+            text-gray-700 border-[1.5px] ${errors[field] ? 'border-red-400' : 'border-gray-100'}
+            shadow-sm`}
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 1,
+          }}
+        />
+        <TouchableOpacity
+          onPress={() => setIsPasswordVisible(prev => ({
+            ...prev,
+            [visibilityKey]: !prev[visibilityKey]
+          }))}
+          className="absolute right-3.5 z-10"
+          style={{ top: 16 }}
+        >
+          <Ionicons 
+            name={isPasswordVisible[visibilityKey] ? "eye-outline" : "eye-off-outline"} 
+            size={20} 
+            color="#6B7280" 
+          />
+        </TouchableOpacity>
+      </View>
+      {errors[field] && (
+        <Text className="text-red-400 text-[12px] mt-1 ml-1 font-poppins-regular">
+          {errors[field]}
+        </Text>
+      )}
+    </View>
+  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -99,99 +179,24 @@ const EditPassword = ({ navigation }) => {
 
       <ScrollView className="flex-1 px-4 pt-4">
         <View className="bg-white p-5 rounded-2xl shadow-sm mb-6">
-          <View className="mb-8">
-            <Text className="font-poppins-medium text-[13px] text-gray-700 mb-2 ml-1">
-              Password Baru
-            </Text>
-            <View className="relative">
-              <View className="absolute left-3.5 z-10" style={{ top: 16 }}>
-                <Ionicons name="key" size={20} color={errors.password ? '#ef4444' : '#6B7280'} />
-              </View>
-              <TextInput
-                value={formData.password}
-                onChangeText={(value) => {
-                  setFormData(prev => ({ ...prev, password: value }));
-                  setErrors(prev => ({ ...prev, password: "" }));
-                }}
-                placeholder="Masukkan password baru"
-                maxLength={12}
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry={!isPasswordVisible}
-                className={`bg-white pl-14 pr-12 py-3.5 rounded-xl text-[15px] font-poppins-medium 
-                  text-gray-700 border-[1.5px] ${errors.password ? 'border-red-400' : 'border-gray-100'}
-                  shadow-sm`}
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 1,
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                className="absolute right-3.5 z-10"
-                style={{ top: 16 }}
-              >
-                <Ionicons 
-                  name={isPasswordVisible ? "eye-outline" : "eye-off-outline"} 
-                  size={20} 
-                  color="#6B7280" 
-                />
-              </TouchableOpacity>
-            </View>
-            {errors.password && (
-              <Text className="text-red-400 text-[12px] mt-1 ml-1 font-poppins-regular">
-                {errors.password}
-              </Text>
-            )}
-          </View>
-
-          <View className="mb-1">
-            <Text className="font-poppins-medium text-[13px] text-gray-700 mb-2 ml-1">
-              Konfirmasi Password
-            </Text>
-            <View className="relative">
-              <View className="absolute left-3.5 z-10" style={{ top: 16 }}>
-                <Ionicons name="key" size={20} color={errors.password_confirmation ? '#ef4444' : '#6B7280'} />
-              </View>
-              <TextInput
-                value={formData.password_confirmation}
-                onChangeText={(value) => {
-                  setFormData(prev => ({ ...prev, password_confirmation: value }));
-                  setErrors(prev => ({ ...prev, password_confirmation: "" }));
-                }}
-                placeholder="Konfirmasi password baru"
-                placeholderTextColor="#9CA3AF"
-                maxLength={12}
-                secureTextEntry={!isConfirmPasswordVisible}
-                className={`bg-white pl-14 pr-12 py-3.5 rounded-xl text-[15px] font-poppins-medium 
-                  text-gray-700 border-[1.5px] ${errors.password_confirmation ? 'border-red-400' : 'border-gray-100'}
-                  shadow-sm`}
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 1,
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                className="absolute right-3.5 z-10"
-                style={{ top: 16 }}
-              >
-                <Ionicons 
-                  name={isConfirmPasswordVisible ? "eye-outline" : "eye-off-outline"} 
-                  size={20} 
-                  color="#6B7280" 
-                />
-              </TouchableOpacity>
-            </View>
-            {errors.password_confirmation && (
-              <Text className="text-red-400 text-[12px] mt-1 ml-1 font-poppins-regular">
-                {errors.password_confirmation}
-              </Text>
-            )}
-          </View>
+          {renderPasswordInput(
+            "old_password",
+            "Password Lama",
+            "Masukkan password lama",
+            "old"
+          )}
+          {renderPasswordInput(
+            "password",
+            "Password Baru",
+            "Masukkan password baru",
+            "new"
+          )}
+          {renderPasswordInput(
+            "password_confirmation",
+            "Konfirmasi Password",
+            "Konfirmasi password baru",
+            "confirm"
+          )}
         </View>
 
         <TouchableOpacity

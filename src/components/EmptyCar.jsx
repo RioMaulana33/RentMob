@@ -3,7 +3,7 @@ import { View, Text, Image } from 'react-native';
 
 const EmptyCar = () => {
   return (
-    <View className="flex-1 items-center justify-center py-8">
+    <View className="flex-1 items-center justify-center py-8 top-28">
       <Image 
         source={ require('../assets/image/biasa.png') }
         alt="Select City Illustration"
@@ -14,7 +14,7 @@ const EmptyCar = () => {
         Pilih Kota Anda
       </Text>
       <Text className="text-gray-500 font-poppins-regular text-center px-8">
-        Silakan pilih kota untuk melihat daftar mobil yang tersedia di Kota Anda
+        Silahkan pilih kota untuk melihat daftar mobil yang tersedia di Kota Anda
       </Text>
     </View>
   );

@@ -33,8 +33,6 @@ import AuthNavigator from './src/screen/AuthNavigator';
 import BottomTabNavigator from './src/screen/BottomTabNavigator';
 import { Camera } from 'react-native-vision-camera';
 
-
-
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
@@ -102,19 +100,6 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  useEffect(() => {
-    const initializeCamera = async () => {
-      try {
-        console.log('Initializing camera...');
-        const permission = await Camera.requestCameraPermission();
-        console.log('Camera permission result:', permission);
-      } catch (error) {
-        console.error('Failed to initialize camera:', error);
-      }
-    };
-
-    initializeCamera();
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

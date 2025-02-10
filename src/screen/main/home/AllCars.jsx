@@ -5,17 +5,28 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from 'react-native-modal';
 import axios from '../../../libs/axios';
-import CarLoader from '../../../components/CarLoader'; 
+import AllCarLoader from '../../../components/AllCarLoader';
+import SearchFilterBar from '../../../components/SearchFilterBar';
+import WishlistButton from '../../../components/WishlistButton';
+import LinearGradient from 'react-native-linear-gradient';
+import { useUser } from '../../../services/UseUser';
 
 const { height } = Dimensions.get('window');
 
 const AllCars = ({ route, navigation }) => {
+    const { data: user } = useUser();
     const { kotaId, kotaName, initialCars } = route.params;
     const [cars, setCars] = useState(initialCars || []);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isCarDetailsModalVisible, setIsCarDetailsModalVisible] = useState(false);
     const [selectedCar, setSelectedCar] = useState(null);
+    const [filters, setFilters] = useState({
+        priceRange: 'all',
+        fuelType: 'all',
+        carType: 'all',
+        capacity: 'all'
+    });
 
     const formatRupiah = (number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -32,10 +43,17 @@ const AllCars = ({ route, navigation }) => {
         }
     }, [kotaId]);
 
+
+
     const fetchCars = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`/mobil/getkota/${kotaId}`);
+            const response = await axios.get(`/mobil/getkota/${kotaId}`, {
+                params: {
+                    search: searchQuery,
+                    ...filters
+                }
+            });
             setCars(response.data.data);
         } catch (error) {
             console.error("Error fetching cars:", error);
@@ -43,6 +61,12 @@ const AllCars = ({ route, navigation }) => {
             setIsLoading(false);
         }
     };
+
+    // Add useEffect to refetch when filters change
+    useEffect(() => {
+        fetchCars();
+    }, [searchQuery, filters, kotaId]);
+
 
     const filteredCars = cars.filter(car =>
         car.mobil.merk.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,12 +87,33 @@ const AllCars = ({ route, navigation }) => {
 
     const handleRentCar = () => {
         if (selectedCar) {
-            navigation.navigate("RentalForm", { 
+            navigation.navigate("RentalForm", {
                 carId: selectedCar.mobil.id,
-                kotaId: selectedCar.kota.id  
+                kotaId: selectedCar.kota.id
             });
             handleCloseCarDetail();
         }
+    };
+
+    const handleFilterApply = (newFilters) => {
+        setFilters(newFilters);
+        // Apply the filters to your cars data here
+        const filtered = cars.filter(car => {
+            if (newFilters.priceRange !== 'all') {
+                const price = car.mobil.tarif;
+                if (newFilters.priceRange === 'under200' && price >= 200000) return false;
+                if (newFilters.priceRange === '200to500' && (price < 200000 || price > 500000)) return false;
+                if (newFilters.priceRange === 'above500' && price <= 500000) return false;
+            }
+
+            if (newFilters.fuelType !== 'all' && car.mobil.bahan_bakar.toLowerCase() !== newFilters.fuelType) return false;
+            if (newFilters.carType !== 'all' && car.mobil.type.toLowerCase() !== newFilters.carType) return false;
+            if (newFilters.capacity !== 'all' && car.mobil.kapasitas.toString() !== newFilters.capacity) return false;
+
+            return true;
+        });
+
+        setCars(filtered);
     };
 
     const renderCarDetailSpecItem = (iconName, title, value) => (
@@ -122,30 +167,29 @@ const AllCars = ({ route, navigation }) => {
 
     return (
         <View className="flex-1 bg-gray-50">
-            <View className="bg-white border-b border-gray-100"
-                style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 2,
-                    elevation: 3,
-                }}
-            >
+            <LinearGradient
+                colors={["#0255d6", "#0372f5"]}>
                 <View className="px-4 py-3 flex-row items-center">
                     <TouchableOpacity
                         onPress={() => navigation.goBack()}
                         className="p-2 -ml-2"
                     >
-                        <Ionicons name="arrow-back" size={24} color="#374151" />
+                        <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-                    <Text className="font-poppins-medium text-[18px] text-gray-800 ml-2 top-0.5">
+                    <Text className="font-poppins-medium text-[18px] text-white ml-2 top-0.5">
                         Mobil Tersedia di {kotaName}
                     </Text>
                 </View>
-            </View>
+            </LinearGradient>
+
+            <SearchFilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onFilterApply={handleFilterApply}
+            />
 
             {isLoading ? (
-                <CarLoader /> // Replace ActivityIndicator with CarLoader
+                <AllCarLoader /> // Replace ActivityIndicator with CarLoader
             ) : (
                 <FlatList
                     data={filteredCars}
@@ -205,6 +249,14 @@ const AllCars = ({ route, navigation }) => {
                                 >
                                     <Ionicons name="close" size={24} color="#0255d6" />
                                 </TouchableOpacity>
+
+                                <WishlistButton
+                                    carId={selectedCar.mobil.id}
+                                    kotaId={selectedCar.kota.id}
+                                    userId={user.id}
+                                    onWishlistChange={(isInWishlist) => {
+                                    }}
+                                />
                             </View>
 
                             <View className="px-5 pt-5">

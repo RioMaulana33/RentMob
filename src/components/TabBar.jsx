@@ -20,14 +20,15 @@ function TabBar({ state, navigation }) {
     navigation.navigate(screenName);
   };
 
+
   const getIconName = (screenName) => {
     switch (screenName) {
       case 'Home':
         return 'home-outline';
       case 'MyRent':
         return 'reader-outline';
-      case 'Favorite':
-        return 'heart-outline';
+      case 'Kota':
+        return 'business-outline';
       case 'Profile':
         return 'person-outline';
       default:

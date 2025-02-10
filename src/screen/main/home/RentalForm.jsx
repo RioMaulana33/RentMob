@@ -41,7 +41,7 @@ const RenderDeliveryMethod = ({ method, selected, onSelect }) => (
                 </Text>
                 <Text className="text-gray-500 text-sm font-poppins-regular mt-0.5">
                     {method.id === 1
-                        ? "Ambil dan kembalikan mobil di lokasi rental"
+                        ? "Ambil mobil di lokasi rental"
                         : "Mobil diantar ke lokasi Anda"}
                 </Text>
                 {method.id === 2 && (
@@ -139,6 +139,9 @@ const RentalForm = ({ route, navigation }) => {
     const [loading, setLoading] = useState(true);
     const [deliveryMethods, setDeliveryMethods] = useState([]);
     const [showNoticeCard, setShowNoticeCard] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availabilityError, setAvailabilityError] = useState(null);
+    const [showAvailabilityError, setShowAvailabilityError] = useState(false);
 
     // Date & Time picker states
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -211,6 +214,24 @@ const RentalForm = ({ route, navigation }) => {
         status: 'pending'
     });
 
+    const ensureMinimumRentalPeriod = (startDate, endDate) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Calculate the difference in days
+        const diffTime = end.getTime() - start.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // If the difference is less than 1 day, set end date to start date + 1 day
+        if (diffDays < 1) {
+            const newEndDate = new Date(start);
+            newEndDate.setDate(start.getDate() + 1);
+            return newEndDate;
+        }
+
+        return end;
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -267,18 +288,63 @@ const RentalForm = ({ route, navigation }) => {
         }).format(number);
     };
 
+    const AvailabilityErrorModal = ({ isVisible, onClose }) => (
+        <Modal
+            isVisible={isVisible}
+            onBackdropPress={onClose}
+            onSwipeComplete={onClose}
+            swipeDirection={['down']}
+            style={{ justifyContent: 'flex-end', margin: 0 }}
+            animationInTiming={500}
+            animationOutTiming={500}
+        >
+            <View className="bg-white rounded-t-3xl p-6">
+                <View className="items-center -mt-3 mb-4">
+                    <View className="w-12 h-1.5 rounded-full bg-gray-200" />
+                </View>
+
+                <View className="items-center mb-4">
+                    <MaterialIcon name="car-off" size={48} color="#ef4444" />
+                </View>
+
+                <Text className="text-xl font-poppins-semibold text-center text-gray-900 mb-2">
+                    Mobil Tidak Tersedia
+                </Text>
+
+                <Text className="text-gray-600 text-center mb-6 font-poppins-regular">
+                    Maaf, mobil tidak tersedia untuk periode yang Anda pilih. Silakan pilih tanggal lain atau cari mobil lainnya.
+                </Text>
+
+                <TouchableOpacity
+                    onPress={onClose}
+                    className="w-full"
+                >
+                    <LinearGradient
+                        colors={["#0255d6", "#0372f5"]}
+                        className="py-4 rounded-2xl"
+                        style={{ borderRadius: 10 }}
+                    >
+                        <Text className="text-white font-poppins-semibold text-center">
+                            Mengerti
+                        </Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            </View>
+        </Modal>
+    );
+
     const handleStartDateChange = (selectedDate) => {
         setShowStartDatePicker(false);
 
-        // Ensure the end date is at least one day after the start date
-        const nextDay = new Date(selectedDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-
         setFormData(prev => {
+            // Always ensure end date is at least one day after the new start date
+            const updatedEndDate = ensureMinimumRentalPeriod(selectedDate, prev.tanggal_selesai);
+
             const updatedFormData = {
                 ...prev,
                 tanggal_mulai: selectedDate,
-                tanggal_selesai: prev.tanggal_selesai <= selectedDate ? nextDay : prev.tanggal_selesai
+                tanggal_selesai: updatedEndDate,
+                jam_mulai: null  // Reset jam_mulai whenever date changes
             };
 
             // Recalculate total cost
@@ -297,15 +363,18 @@ const RentalForm = ({ route, navigation }) => {
         setShowEndDatePicker(false);
 
         setFormData(prev => {
+            // Ensure the selected end date is at least one day after start date
+            const updatedEndDate = ensureMinimumRentalPeriod(prev.tanggal_mulai, selectedDate);
+
             const updatedFormData = {
                 ...prev,
-                tanggal_selesai: selectedDate
+                tanggal_selesai: updatedEndDate
             };
 
             // Recalculate total cost
             updatedFormData.total_biaya = calculateTotalCost(
                 prev.tanggal_mulai,
-                selectedDate,
+                updatedEndDate,
                 carDetails?.tarif || 0
             );
 
@@ -315,44 +384,67 @@ const RentalForm = ({ route, navigation }) => {
 
     const handleSubmit = async () => {
         if (!validateForm()) {
+            console.log('Form validation failed');
             return;
         }
 
+        setIsSubmitting(true);
+        setAvailabilityError(null);
+
         try {
-            const formattedDates = {
+            // Create rental payload
+            const rentalPayload = {
+                mobil_id: carId,
+                kota_id: kotaId,
+                delivery_id: formData.delivery_id,
                 tanggal_mulai: formData.tanggal_mulai.toISOString().split('T')[0],
                 tanggal_selesai: formData.tanggal_selesai.toISOString().split('T')[0],
                 jam_mulai: formData.jam_mulai.toLocaleTimeString('en-US', {
                     hour12: false,
                     hour: '2-digit',
                     minute: '2-digit'
-                }) + ':00'
-            };
-
-            const payload = {
-                ...formData,
-                ...formattedDates,
-                mobil_id: carId,
-                kota_id: kotaId,
+                }) + ':00',
+                rental_option: formData.rental_option,
                 status: 'pending',
+                total_biaya: formData.total_biaya,
+                alamat_pengantaran: formData.alamat_pengantaran || ''
             };
 
-            const response = await axios.post('/penyewaan/store', payload);
+            // Check availability without storing data
+            const availabilityResponse = await axios.post('/penyewaan/check-stok', rentalPayload);
 
-            // Show success modal instead of alert
-            navigation.navigate('HomeMain', {
-                message: 'Pesanan berhasil dibuat',
-                onContinue: () => navigation.navigate('HomeMain')
-            });
+            if (!availabilityResponse.data.available) {
+                setAvailabilityError(availabilityResponse.data.message);
+                setShowAvailabilityError(true);
+                setIsSubmitting(false);
+                return;
+            }
+
+            // If available, proceed with payment
+            const midtransResponse = await axios.post('/penyewaan/midtrans/get-token', rentalPayload);
+
+            if (midtransResponse.data.status === 'success') {
+                navigation.navigate('PaymentWebView', {
+                    paymentUrl: midtransResponse.data.redirect_url,
+                    orderId: midtransResponse.data.order_id,
+                    rentalData: rentalPayload
+                });
+            } else {
+                Alert.alert('Error', 'Gagal memproses pembayaran');
+            }
         } catch (error) {
-            // Show error modal instead of alert
-            setShowValidationModal(true);
-            setFormErrors({
-                ...formErrors,
-                submission: error.response?.data?.message || "Gagal membuat pesanan"
-            });
+            console.error('Error in submission:', error);
+            if (error.response?.data?.message?.includes('tidak tersedia')) {
+                setAvailabilityError('Mobil tidak tersedia untuk periode ini');
+                setShowAvailabilityError(true);
+            } else {
+                Alert.alert('Error', 'Terjadi kesalahan saat memproses pesanan');
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
 
     const DeliveryMethodSection = () => (
         <View className="mb-3">
@@ -681,11 +773,16 @@ const RentalForm = ({ route, navigation }) => {
                     </View>
                     <TouchableOpacity
                         onPress={handleSubmit}
-                        className="bg-blue-500 rounded-full py-3.5 px-8"
+                        disabled={isSubmitting}
+                        className={`${isSubmitting ? 'bg-blue-300' : 'bg-blue-500'} rounded-full py-3.5 px-8`}
                     >
-                        <Text className="text-white font-poppins-semibold text-base">
-                            Sewa Sekarang
-                        </Text>
+                        {isSubmitting ? (
+                            <ActivityIndicator color="white" />
+                        ) : (
+                            <Text className="text-white font-poppins-semibold text-base">
+                                Sewa Mobil
+                            </Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -712,7 +809,7 @@ const RentalForm = ({ route, navigation }) => {
                 value={formData.tanggal_selesai}
                 onChange={handleEndDateChange}
                 onClose={() => setShowEndDatePicker(false)}
-                minimumDate={new Date(formData.tanggal_mulai.getTime() + 24 * 60 * 60 * 1000)}
+                minimumDate={new Date(formData.tanggal_mulai.getTime() + 24 * 60 * 60 * 1000)} // Set minimum to next day after start date
             />
 
             <CustomTimePicker
@@ -735,6 +832,11 @@ const RentalForm = ({ route, navigation }) => {
                 isVisible={isValidationModalVisible}
                 onClose={() => setIsValidationModalVisible(false)}
                 errors={formErrors}
+            />
+
+            <AvailabilityErrorModal
+                isVisible={showAvailabilityError}
+                onClose={() => setShowAvailabilityError(false)}
             />
         </View >
     );
