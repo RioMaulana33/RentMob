@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Dimensions, Image } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -220,7 +220,11 @@ const Wishlist = ({ navigation }) => {
         />
       ) : (
         <View className="flex-1 justify-center items-center px-5">
-          <MaterialIcon name="heart-off" size={48} color="#9ca3af" />
+          <Image
+            source={require('../../../assets/image/favourite-vector.png')}
+            alt="Select City Illustration"
+            className="w-80 h-80 object-contain"
+          />
           <Text className="text-gray-500 font-poppins-medium mt-4 text-center">
             Belum ada mobil yang ditambahkan ke wishlist
           </Text>

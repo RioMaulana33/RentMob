@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import axios from '../libs/axios';
 
-const RentalOptionModal = ({ visible, onClose, onSelect }) => (
+const RentalOptionModal = ({ visible, onClose, onSelect, selectedOption }) => (
     <Modal
         transparent={true}
         visible={visible}
@@ -37,7 +38,7 @@ const RentalOptionModal = ({ visible, onClose, onSelect }) => (
                     </View>
                 </View>
                 <TouchableOpacity
-                    onPress={() => onSelect('Lepas Kunci')}
+                    onPress={() => onSelect(selectedOption)}
                     className="bg-blue-500 rounded-full py-4 items-center"
                 >
                     <Text className="text-white font-poppins-semibold text-base">
@@ -57,75 +58,139 @@ const RentalOptionModal = ({ visible, onClose, onSelect }) => (
     </Modal>
 );
 
-const RentalOptionSection = ({ formData, setFormData }) => {
+const RentalOptionSection = ({ formData, setFormData, rentalOptions, calculateTotalCost, carDetails }) => {
     const [showLepasKunciModal, setShowLepasKunciModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [selectedOption, setSelectedOption] = useState(null);
+
+    // Calculate rental duration in days
+    const calculateRentalDays = (startDate, endDate) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end - start);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    // Calculate daily cost for rental option
+    const calculateDailyOptionCost = (option) => {
+        const rentalDays = calculateRentalDays(formData.tanggal_mulai, formData.tanggal_selesai);
+        return option.biaya * rentalDays;
+    };
+
+    useEffect(() => {
+        const fetchRentalOptions = async () => {
+            try {
+                const response = await axios.get('/rentaloption/get');
+                const optionsWithIcons = response.data.data.map(option => ({
+                    ...option,
+                    icon: option.nama.toLowerCase().includes('supir') ? 'account-tie' : 'key-variant',
+                    color: option.nama.toLowerCase().includes('supir') ? 'bg-green-500' : 'bg-blue-500'
+                }));
+            } catch (error) {
+                console.error('Error fetching rental options:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRentalOptions();
+    }, []);
 
     const handleRentalOptionSelect = (option) => {
-        if (option === 'Lepas Kunci') {
+        if (option.nama.toLowerCase().includes('lepas kunci')) {
+            setSelectedOption(option);
             setShowLepasKunciModal(true);
         } else {
-            setFormData(prev => ({ ...prev, rental_option: option }));
+            const newTotalCost = calculateTotalCost(
+                formData.tanggal_mulai,
+                formData.tanggal_selesai,
+                carDetails?.tarif || 0,
+                option.id,
+                formData.delivery_id
+            );
+
+            setFormData(prev => ({
+                ...prev,
+                rentaloptions_id: option.id,
+                total_biaya: newTotalCost
+            }));
         }
     };
 
-    const rentalOptions = [
-        {
-            id: 'Dengan Supir',
-            label: 'Dengan Supir',
-            icon: 'account-tie',
-            description: 'Mobil dikendarai oleh sopir profesional',
-            color: 'bg-green-500'
-        },
-        {
-            id: 'Lepas Kunci',
-            label: 'Lepas Kunci',
-            icon: 'key-variant',
-            description: 'Anda mengemudi sendiri (butuh SIM)',
-            color: 'bg-blue-500'
-        }
-    ];
+    if (!rentalOptions.length) {
+        return (
+            <View className="items-center justify-center py-4">
+                <ActivityIndicator size="small" color="#0255d6" />
+            </View>
+        );
+    }
 
     return (
         <View>
+            <Text className="text-gray-700 font-poppins-medium mb-2">
+                Pilih Opsi Rental
+            </Text>
             <View className="flex-row gap-4 justify-between">
-                {rentalOptions.map((option) => (
-                    <TouchableOpacity
-                        key={option.id}
-                        onPress={() => handleRentalOptionSelect(option.id)}
-                        className={`flex-1 p-4 rounded-xl border ${
-                            formData.rental_option === option.id
+                {rentalOptions.map((option) => {
+                    const dailyOptionCost = calculateDailyOptionCost(option);
+                    const rentalDays = calculateRentalDays(formData.tanggal_mulai, formData.tanggal_selesai);
+
+                    return (
+                        <TouchableOpacity
+                            key={option.id}
+                            onPress={() => handleRentalOptionSelect(option)}
+                            className={`flex-1 p-4 rounded-xl border ${formData.rentaloptions_id === option.id
                                 ? 'border-blue-500 bg-blue-50'
                                 : 'border-gray-200 bg-white'
-                        }`}
-                    >
-                        <View className="items-center">
-                            <View className={`w-16 h-16 ${option.color} rounded-full items-center justify-center mb-3`}>
-                                <MaterialIcon 
-                                    name={option.icon} 
-                                    size={32} 
-                                    color="white" 
-                                />
-                            </View>
-                            <Text className={`font-poppins-semibold text-base mb-1 ${
-                                formData.rental_option === option.id 
-                                    ? 'text-blue-600' 
+                                }`}
+                        >
+                            <View className="items-center">
+                                <View className={`w-16 h-16 ${option.color} rounded-full items-center justify-center mb-3`}>
+                                    <MaterialIcon
+                                        name={option.icon}
+                                        size={32}
+                                        color="white"
+                                    />
+                                </View>
+                                <Text className={`font-poppins-semibold text-base mb-1 ${formData.rental_option === option.id
+                                    ? 'text-blue-600'
                                     : 'text-gray-800'
-                            }`}>
-                                {option.label}
-                            </Text>
-                            <Text className="text-gray-500 text-center font-poppins-regular text-xs">
-                                {option.description}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                                    }`}>
+                                    {option.nama}
+                                </Text>
+                                <Text className="text-gray-500 text-center font-poppins-regular text-xs">
+                                    {option.deskripsi}
+                                </Text>
+                                <Text className="text-blue-500 font-poppins-medium text-sm mt-2">
+                                    +Rp {option.biaya.toLocaleString('id-ID')}/hari
+                                </Text>
+                                <Text className="text-gray-500 font-poppins-regular text-xs mt-1">
+                                    Total {rentalDays} hari: Rp {dailyOptionCost.toLocaleString('id-ID')}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
 
-            <RentalOptionModal 
+            <RentalOptionModal
                 visible={showLepasKunciModal}
                 onClose={() => setShowLepasKunciModal(false)}
+                selectedOption={selectedOption}
                 onSelect={(option) => {
-                    setFormData(prev => ({ ...prev, rental_option: option }));
+                    const newTotalCost = calculateTotalCost(
+                        formData.tanggal_mulai,
+                        formData.tanggal_selesai,
+                        carDetails?.tarif || 0,
+                        option.id,
+                        formData.delivery_id
+                    );
+
+                    setFormData(prev => ({
+                        ...prev,
+                        rentaloptions_id: option.id,
+                        total_biaya: newTotalCost
+                    }));
                     setShowLepasKunciModal(false);
                 }}
             />

@@ -13,7 +13,16 @@ import Modal from 'react-native-modal';
 
 const RenderDeliveryMethod = ({ method, selected, onSelect }) => (
     <TouchableOpacity
-        onPress={onSelect}
+        onPress={() => {
+            const newTotalCost = calculateTotalCost(
+                formData.tanggal_mulai,
+                formData.tanggal_selesai,
+                carDetails?.tarif || 0,
+                formData.rentaloptions_id,
+                method.id
+            );
+            onSelect(method.id, newTotalCost);
+        }}
         className={`w-full mb-3 ${selected ? 'bg-blue-50' : 'bg-white'} 
             p-4 rounded-xl border-2 ${selected ? 'border-blue-500' : 'border-gray-200'}`}
     >
@@ -106,7 +115,7 @@ const ValidationModal = ({ isVisible, onClose, errors }) => (
                             <Text className="text-red-600 font-poppins-medium ml-3 flex-1">
                                 {key === 'alamat_pengantaran' && 'Alamat pengantaran belum diisi'}
                                 {key === 'delivery_id' && 'Metode pengantaran belum dipilih'}
-                                {key === 'rental_option' && 'Opsi rental belum dipilih'}
+                                {key === 'rentaloptions_id' && 'Opsi rental belum dipilih'}
                             </Text>
                         </View>
                     )
@@ -142,6 +151,8 @@ const RentalForm = ({ route, navigation }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [availabilityError, setAvailabilityError] = useState(null);
     const [showAvailabilityError, setShowAvailabilityError] = useState(false);
+    const [rentalOptions, setRentalOptions] = useState([]);
+
 
     // Date & Time picker states
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -151,7 +162,7 @@ const RentalForm = ({ route, navigation }) => {
     const [formErrors, setFormErrors] = useState({
         alamat_pengantaran: false,
         delivery_id: false,
-        rental_option: false
+        rentaloptions_id: false
     });
 
     const [isValidationModalVisible, setIsValidationModalVisible] = useState(false);
@@ -162,7 +173,7 @@ const RentalForm = ({ route, navigation }) => {
         const newErrors = {
             alamat_pengantaran: false,
             delivery_id: false,
-            rental_option: false
+            rentaloptions_id: false
         };
 
         // Validate delivery method
@@ -172,8 +183,8 @@ const RentalForm = ({ route, navigation }) => {
         }
 
         // Validate rental option
-        if (!formData.rental_option) {
-            newErrors.rental_option = true;
+        if (!formData.rentaloptions_id) {
+            newErrors.rentaloptions_id = true;
             isValid = false;
         }
 
@@ -208,7 +219,7 @@ const RentalForm = ({ route, navigation }) => {
         })(),
         jam_mulai: null,
         delivery_id: '',
-        rental_option: '',
+        rentaloptions_id: '',
         total_biaya: 0,
         alamat_pengantaran: '',
         status: 'pending'
@@ -245,6 +256,15 @@ const RentalForm = ({ route, navigation }) => {
                 const deliveryResponse = await axios.get('/delivery/get');
                 setDeliveryMethods(deliveryResponse.data.data);
 
+                // Add rental options fetch
+                const rentalOptionsResponse = await axios.get('/rentaloption/get');
+                const optionsWithIcons = rentalOptionsResponse.data.data.map(option => ({
+                    ...option,
+                    icon: option.nama.toLowerCase().includes('supir') ? 'account-tie' : 'key-variant',
+                    color: option.nama.toLowerCase().includes('supir') ? 'bg-green-500' : 'bg-blue-500'
+                }));
+                setRentalOptions(optionsWithIcons);
+
                 // Calculate initial total cost
                 const initialTotalCost = calculateTotalCost(
                     formData.tanggal_mulai,
@@ -268,16 +288,36 @@ const RentalForm = ({ route, navigation }) => {
         fetchData();
     }, [carId, kotaId]);
 
-    const calculateTotalCost = (startDate, endDate, dailyRate) => {
+    const calculateTotalCost = (startDate, endDate, dailyRate, rentalOptionId = null, deliveryId = null) => {
         // Ensure startDate and endDate are Date objects
         const start = startDate instanceof Date ? startDate : new Date(startDate);
         const end = endDate instanceof Date ? endDate : new Date(endDate);
 
         // Calculate days, ensuring at least 1 day
         const rentalDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-        return dailyRate * rentalDays;
-    };
 
+        // Get rental option cost if an option is selected
+        let rentalOptionCost = 0;
+        if (rentalOptionId) {
+            const selectedOption = rentalOptions.find(opt => opt.id === rentalOptionId);
+            if (selectedOption) {
+                // Multiply the rental option cost by the number of days
+                rentalOptionCost = selectedOption.biaya * rentalDays;
+            }
+        }
+
+        // Get delivery cost if delivery method is selected (delivery cost is one-time, not per day)
+        let deliveryCost = 0;
+        if (deliveryId) {
+            const selectedDelivery = deliveryMethods.find(method => method.id === deliveryId);
+            if (selectedDelivery) {
+                deliveryCost = selectedDelivery.biaya || 0;
+            }
+        }
+
+        // Calculate total cost: (daily rate * number of days) + (rental option cost * number of days) + delivery cost
+        return (dailyRate * rentalDays) + rentalOptionCost + deliveryCost;
+    };
 
     const formatRupiah = (number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -337,21 +377,21 @@ const RentalForm = ({ route, navigation }) => {
         setShowStartDatePicker(false);
 
         setFormData(prev => {
-            // Always ensure end date is at least one day after the new start date
             const updatedEndDate = ensureMinimumRentalPeriod(selectedDate, prev.tanggal_selesai);
 
             const updatedFormData = {
                 ...prev,
                 tanggal_mulai: selectedDate,
                 tanggal_selesai: updatedEndDate,
-                jam_mulai: null  // Reset jam_mulai whenever date changes
+                jam_mulai: null
             };
 
-            // Recalculate total cost
             updatedFormData.total_biaya = calculateTotalCost(
-                updatedFormData.tanggal_mulai,
-                updatedFormData.tanggal_selesai,
-                carDetails?.tarif || 0
+                selectedDate,
+                updatedEndDate,
+                carDetails?.tarif || 0,
+                updatedFormData.rentaloptions_id,
+                updatedFormData.delivery_id
             );
 
             return updatedFormData;
@@ -363,7 +403,6 @@ const RentalForm = ({ route, navigation }) => {
         setShowEndDatePicker(false);
 
         setFormData(prev => {
-            // Ensure the selected end date is at least one day after start date
             const updatedEndDate = ensureMinimumRentalPeriod(prev.tanggal_mulai, selectedDate);
 
             const updatedFormData = {
@@ -371,11 +410,12 @@ const RentalForm = ({ route, navigation }) => {
                 tanggal_selesai: updatedEndDate
             };
 
-            // Recalculate total cost
             updatedFormData.total_biaya = calculateTotalCost(
                 prev.tanggal_mulai,
                 updatedEndDate,
-                carDetails?.tarif || 0
+                carDetails?.tarif || 0,
+                updatedFormData.rentaloptions_id,
+                updatedFormData.delivery_id
             );
 
             return updatedFormData;
@@ -404,7 +444,7 @@ const RentalForm = ({ route, navigation }) => {
                     hour: '2-digit',
                     minute: '2-digit'
                 }) + ':00',
-                rental_option: formData.rental_option,
+                rentaloptions_id: formData.rentaloptions_id,
                 status: 'pending',
                 total_biaya: formData.total_biaya,
                 alamat_pengantaran: formData.alamat_pengantaran || ''
@@ -446,33 +486,76 @@ const RentalForm = ({ route, navigation }) => {
     };
 
 
-    const DeliveryMethodSection = () => (
-        <View className="mb-3">
-            <View className="space-y-2">
-                {deliveryMethods.map((method) => (
-                    <RenderDeliveryMethod
-                        key={method.id}
-                        method={method}
-                        selected={formData.delivery_id === method.id}
-                        onSelect={() => setFormData(prev => {
-                            const deliveryCost = method.biaya || 0;
-                            const rentalCost = calculateTotalCost(
-                                prev.tanggal_mulai,
-                                prev.tanggal_selesai,
-                                carDetails?.tarif || 0
-                            );
+    // Pindahkan RenderDeliveryMethod ke dalam DeliveryMethodSection
+    const DeliveryMethodSection = () => {
+        // Pindahkan render method ke dalam komponen
+        const renderMethod = (method) => (
+            <TouchableOpacity
+                key={method.id}
+                onPress={() => {
+                    const newTotalCost = calculateTotalCost(
+                        formData.tanggal_mulai,
+                        formData.tanggal_selesai,
+                        carDetails?.tarif || 0,
+                        formData.rentaloptions_id,
+                        method.id
+                    );
+                    setFormData(prev => ({
+                        ...prev,
+                        delivery_id: method.id,
+                        total_biaya: newTotalCost
+                    }));
+                }}
+                className={`w-full mb-3 ${formData.delivery_id === method.id ? 'bg-blue-50' : 'bg-white'} 
+                p-4 rounded-xl border-2 ${formData.delivery_id === method.id ? 'border-blue-500' : 'border-gray-200'}`}
+            >
+                <View className="flex-row items-center">
+                    <View className={`w-5 h-5 rounded-full border-2 mr-3 
+                    ${formData.delivery_id === method.id ? 'border-blue-500 bg-blue-500' : 'border-gray-300'} 
+                    justify-center items-center`}>
+                        {formData.delivery_id === method.id && (
+                            <MaterialIcon name="check" size={14} color="white" />
+                        )}
+                    </View>
 
-                            return {
-                                ...prev,
-                                delivery_id: method.id,
-                                total_biaya: rentalCost + deliveryCost
-                            };
-                        })}
-                    />
-                ))}
+                    <View className={`w-10 h-10 rounded-full ${formData.delivery_id === method.id ? 'bg-blue-100' : 'bg-gray-100'} 
+                    justify-center items-center mr-3`}>
+                        <MaterialIcon
+                            name={method.id === 1 ? "car" : "map-marker-radius"}
+                            size={24}
+                            color={formData.delivery_id === method.id ? "#0255d6" : "#6B7280"}
+                        />
+                    </View>
+
+                    <View className="flex-1">
+                        <Text className={`font-poppins-semibold ${formData.delivery_id === method.id ? 'text-blue-500' : 'text-gray-900'}`}>
+                            {method.nama}
+                        </Text>
+                        <Text className="text-gray-500 text-sm font-poppins-regular mt-0.5">
+                            {method.id === 1
+                                ? "Ambil mobil di lokasi rental"
+                                : "Mobil diantar ke lokasi Anda"}
+                        </Text>
+                        {method.id === 2 && (
+                            <View className="flex-row items-center mt-2">
+                                <Text className="text-gray-500 text-xs font-poppins-regular">
+                                    <Text className='text-red-500'>*</Text> Terdapat biaya tambahan
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+
+        return (
+            <View className="mb-3">
+                <View className="space-y-2">
+                    {deliveryMethods.map((method) => renderMethod(method))}
+                </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     if (loading) {
         return (
@@ -643,6 +726,9 @@ const RentalForm = ({ route, navigation }) => {
                 <RentalOptionSection
                     formData={formData}
                     setFormData={setFormData}
+                    rentalOptions={rentalOptions}
+                    calculateTotalCost={calculateTotalCost}
+                    carDetails={carDetails}
                 />
 
                 {/* Alamat Pengantaran */}

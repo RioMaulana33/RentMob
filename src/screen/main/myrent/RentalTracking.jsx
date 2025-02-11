@@ -62,7 +62,17 @@ const RentalTracking = ({ route, navigation }) => {
             case 2:
                 return "Layanan Jemput";
             default:
-                return "Metode Tidak Diketahui";
+                return "-";
+        }
+    };
+    const getRentalOptionName = (rentaloptionsId) => {
+        switch (rentaloptionsId) {
+            case 1:
+                return "Dengan Supir";
+            case 2:
+                return "Lepas Kunci";
+            default:
+                return "-";
         }
     };
 
@@ -257,9 +267,13 @@ const RentalTracking = ({ route, navigation }) => {
                                 <Text className="font-poppins-regular text-gray-700">Status</Text>
                                 <Text className="font-poppins-semibold text-black">{item.status}</Text>
                             </View>
-                            <View className="flex-row justify-between">
+                            <View className="flex-row justify-between mb-2">
                                 <Text className="font-poppins-regular text-gray-700">Metode</Text>
-                                <Text className="font-poppins-semibold text-black">{getDeliveryMethodName(item.delivery_id)}</Text>
+                                <Text className="font-poppins-semibold text-black">{item.delivery?.nama}</Text>
+                            </View>
+                            <View className="flex-row justify-between">
+                                <Text className="font-poppins-regular text-gray-700">Opsi Rental</Text>
+                                <Text className="font-poppins-semibold text-black">{getRentalOptionName(item.rentaloptions_id)}</Text>
                             </View>
                             {item.delivery_id === 2 && item.alamat_pengantaran && (
                                 <View className="mt-2 pt-2 border-t border-blue-200">
