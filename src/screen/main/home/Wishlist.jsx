@@ -85,7 +85,7 @@ const Wishlist = ({ navigation }) => {
   const removeFromWishlist = async (uuid) => {
     try {
       await axios.delete(`/wishlist/wishlist/destroy/${uuid}`);
-      handleCloseCarDetail(); 
+      handleCloseCarDetail();
       fetchWishlist(page);
     } catch (error) {
       console.error('Error removing from wishlist:', error);
@@ -244,101 +244,107 @@ const Wishlist = ({ navigation }) => {
         backdropTransitionOutTiming={500}
         backdropOpacity={0.5}
       >
-        {selectedCar && (
-          <View
-            style={{
-              backgroundColor: 'white',
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              height: height * 0.85,
-            }}
-          >
-            <View className="relative">
-              <FastImage
-                source={{
-                  uri: selectedCar.mobil.foto
-                    ? `${process.env.APP_URL}/storage/${selectedCar.mobil.foto}`
-                    : "https://via.placeholder.com",
-                  priority: FastImage.priority.high
-                }}
-                style={{
-                  width: '100%',
-                  height: 256,
-                  borderTopLeftRadius: 16,
-                  borderTopRightRadius: 16,
-                  backgroundColor: '#e5e5e5'
-                }}
-                resizeMode={FastImage.resizeMode.cover}
-              />
-              <TouchableOpacity
-                onPress={handleCloseCarDetail}
-                className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
-              >
-                <Icon name="close" size={24} color="#0255d6" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => removeFromWishlist(selectedCar.uuid)}
-                className="absolute top-4 left-4 bg-white/70 rounded-full p-2"
-              >
-                <Icon name="heart" size={24} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="px-5 pt-5">
-              <Text className="text-2xl font-poppins-semibold mb-2 text-black">
-                {selectedCar.mobil.merk} {selectedCar.mobil.model}
-              </Text>
-              <Text className="text-blue-500 text-lg font-poppins-medium mb-4">
-                {formatRupiah(selectedCar.mobil.tarif)}/hari
-              </Text>
-
-              <View className="space-y-3">
-                {renderCarDetailSpecItem(
-                  "car",
-                  "Tahun",
-                  selectedCar.mobil.tahun
-                )}
-                {renderCarDetailSpecItem(
-                  "car-info",
-                  "Model",
-                  selectedCar.mobil.model
-                )}
-                {renderCarDetailSpecItem(
-                  "car-shift-pattern",
-                  "Tipe",
-                  selectedCar.mobil.type
-                )}
-                {renderCarDetailSpecItem(
-                  "car-seat",
-                  "Kapasitas",
-                  `${selectedCar.mobil.kapasitas} Orang`
-                )}
-                {renderCarDetailSpecItem(
-                  "gas-station",
-                  "Bahan Bakar",
-                  selectedCar.mobil.bahan_bakar
-                )}
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            height: height * 0.85,
+          }}
+        >
+          {selectedCar ? (
+            <>
+              <View className="relative">
+                <FastImage
+                  source={{
+                    uri: selectedCar.mobil.foto
+                      ? `${process.env.APP_URL}/storage/${selectedCar.mobil.foto}`
+                      : "https://via.placeholder.com",
+                    priority: FastImage.priority.high
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 256,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    backgroundColor: '#e5e5e5'
+                  }}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
+                <TouchableOpacity
+                  onPress={handleCloseCarDetail}
+                  className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
+                >
+                  <Icon name="close" size={24} color="#0255d6" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => removeFromWishlist(selectedCar.uuid)}
+                  className="absolute top-4 left-4 bg-white/70 rounded-full p-2"
+                >
+                  <Icon name="heart" size={24} color="#ef4444" />
+                </TouchableOpacity>
               </View>
-            </View>
 
-            <View
-              className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: '#E5E7EB'
-              }}
-            >
-              <TouchableOpacity
-                onPress={handleRentCar}
-                className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
-              >
-                <Text className="text-white font-poppins-semibold text-base">
-                  Sewa Mobil Sekarang
+              <View className="px-5 pt-5">
+                <Text className="text-2xl font-poppins-semibold mb-2 text-black">
+                  {selectedCar.mobil.merk} {selectedCar.mobil.model}
                 </Text>
-              </TouchableOpacity>
+                <Text className="text-blue-500 text-lg font-poppins-medium mb-4">
+                  {formatRupiah(selectedCar.mobil.tarif)}/hari
+                </Text>
+
+                <View className="space-y-3">
+                  {renderCarDetailSpecItem(
+                    "car",
+                    "Tahun",
+                    selectedCar.mobil.tahun
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-info",
+                    "Model",
+                    selectedCar.mobil.model
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-shift-pattern",
+                    "Tipe",
+                    selectedCar.mobil.type
+                  )}
+                  {renderCarDetailSpecItem(
+                    "car-seat",
+                    "Kapasitas",
+                    `${selectedCar.mobil.kapasitas} Orang`
+                  )}
+                  {renderCarDetailSpecItem(
+                    "gas-station",
+                    "Bahan Bakar",
+                    selectedCar.mobil.bahan_bakar
+                  )}
+                </View>
+              </View>
+
+              <View
+                className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: '#E5E7EB'
+                }}
+              >
+                <TouchableOpacity
+                  onPress={handleRentCar}
+                  className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
+                >
+                  <Text className="text-white font-poppins-semibold text-base">
+                    Sewa Mobil Sekarang
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-gray-500 font-poppins-medium">Loading...</Text>
             </View>
-          </View>
-        )}
+          )}
+        </View>
       </Modal>
     </View>
   );

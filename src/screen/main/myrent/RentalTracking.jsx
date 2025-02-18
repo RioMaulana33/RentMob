@@ -278,7 +278,7 @@ const RentalTracking = ({ route, navigation }) => {
                             {item.delivery_id === 2 && item.alamat_pengantaran && (
                                 <View className="mt-2 pt-2 border-t border-blue-200">
                                     <Text className="font-poppins-regular text-gray-700 mb-1">Alamat Pengantaran :</Text>
-                                    <Text className="font-poppins-medium text-black text-base">{item.alamat_pengantaran}</Text>
+                                    <Text className="font-poppins-medium text-black text-base leading-relaxed">{item.alamat_pengantaran}</Text>
                                 </View>
                             )}
                         </View>

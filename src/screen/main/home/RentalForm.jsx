@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomDatePicker from '../../../components/CustomDatePicker';
 import CustomTimePicker from '../../../components/CustomTImePicker';
 import RentalOptionSection from '../../../components/RentalOptionSection';
+import MapLocationPicker from '../../../components/MapLocationPicker ';
 import axios from '../../../libs/axios';
 import FastImage from 'react-native-fast-image';
 import Modal from 'react-native-modal';
@@ -116,6 +117,7 @@ const ValidationModal = ({ isVisible, onClose, errors }) => (
                                 {key === 'alamat_pengantaran' && 'Alamat pengantaran belum diisi'}
                                 {key === 'delivery_id' && 'Metode pengantaran belum dipilih'}
                                 {key === 'rentaloptions_id' && 'Opsi rental belum dipilih'}
+                                {key === 'jam_mulai' && 'Jam mulai belum dipilih'}
                             </Text>
                         </View>
                     )
@@ -152,6 +154,8 @@ const RentalForm = ({ route, navigation }) => {
     const [availabilityError, setAvailabilityError] = useState(null);
     const [showAvailabilityError, setShowAvailabilityError] = useState(false);
     const [rentalOptions, setRentalOptions] = useState([]);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [deliveryDistance, setDeliveryDistance] = useState(0);
 
 
     // Date & Time picker states
@@ -162,7 +166,8 @@ const RentalForm = ({ route, navigation }) => {
     const [formErrors, setFormErrors] = useState({
         alamat_pengantaran: false,
         delivery_id: false,
-        rentaloptions_id: false
+        rentaloptions_id: false,
+        jam_mulai: false
     });
 
     const [isValidationModalVisible, setIsValidationModalVisible] = useState(false);
@@ -173,7 +178,8 @@ const RentalForm = ({ route, navigation }) => {
         const newErrors = {
             alamat_pengantaran: false,
             delivery_id: false,
-            rentaloptions_id: false
+            rentaloptions_id: false,
+            jam_mulai: false
         };
 
         // Validate delivery method
@@ -185,6 +191,12 @@ const RentalForm = ({ route, navigation }) => {
         // Validate rental option
         if (!formData.rentaloptions_id) {
             newErrors.rentaloptions_id = true;
+            isValid = false;
+        }
+
+        // Validate time
+        if (!formData.jam_mulai) {
+            newErrors.jam_mulai = true;
             isValid = false;
         }
 
@@ -222,6 +234,7 @@ const RentalForm = ({ route, navigation }) => {
         rentaloptions_id: '',
         total_biaya: 0,
         alamat_pengantaran: '',
+        deskripsi_alamat: '',
         status: 'pending'
     });
 
@@ -288,34 +301,32 @@ const RentalForm = ({ route, navigation }) => {
         fetchData();
     }, [carId, kotaId]);
 
-    const calculateTotalCost = (startDate, endDate, dailyRate, rentalOptionId = null, deliveryId = null) => {
-        // Ensure startDate and endDate are Date objects
+    const calculateTotalCost = (startDate, endDate, dailyRate, rentalOptionId = null, deliveryId = null, distance = 0) => {
         const start = startDate instanceof Date ? startDate : new Date(startDate);
         const end = endDate instanceof Date ? endDate : new Date(endDate);
-
-        // Calculate days, ensuring at least 1 day
         const rentalDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
-        // Get rental option cost if an option is selected
         let rentalOptionCost = 0;
         if (rentalOptionId) {
             const selectedOption = rentalOptions.find(opt => opt.id === rentalOptionId);
             if (selectedOption) {
-                // Multiply the rental option cost by the number of days
                 rentalOptionCost = selectedOption.biaya * rentalDays;
             }
         }
 
-        // Get delivery cost if delivery method is selected (delivery cost is one-time, not per day)
         let deliveryCost = 0;
         if (deliveryId) {
             const selectedDelivery = deliveryMethods.find(method => method.id === deliveryId);
             if (selectedDelivery) {
-                deliveryCost = selectedDelivery.biaya || 0;
+                // For delivery option 2, calculate based on distance
+                if (deliveryId === 2 && distance > 0) {
+                    deliveryCost = Math.ceil(distance) * selectedDelivery.biaya;
+                } else {
+                    deliveryCost = selectedDelivery.biaya;
+                }
             }
         }
 
-        // Calculate total cost: (daily rate * number of days) + (rental option cost * number of days) + delivery cost
         return (dailyRate * rentalDays) + rentalOptionCost + deliveryCost;
     };
 
@@ -447,7 +458,8 @@ const RentalForm = ({ route, navigation }) => {
                 rentaloptions_id: formData.rentaloptions_id,
                 status: 'pending',
                 total_biaya: formData.total_biaya,
-                alamat_pengantaran: formData.alamat_pengantaran || ''
+                alamat_pengantaran: formData.alamat_pengantaran || '',
+                deskripsi_alamat: formData.deskripsi_alamat,
             };
 
             // Check availability without storing data
@@ -737,20 +749,62 @@ const RentalForm = ({ route, navigation }) => {
                         <Text className="text-gray-700 font-poppins-medium mb-2">
                             Alamat Pengantaran <Text className="text-red-500">*</Text>
                         </Text>
-                        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+
+                        <MapLocationPicker
+                            onLocationSelect={(locationData) => {
+                                const { latitude, longitude, distance, deliveryCost } = locationData;
+                                setSelectedLocation({ latitude, longitude });
+                                setDeliveryDistance(distance);
+
+                                const newTotalCost = calculateTotalCost(
+                                    formData.tanggal_mulai,
+                                    formData.tanggal_selesai,
+                                    carDetails?.tarif || 0,
+                                    formData.rentaloptions_id,
+                                    formData.delivery_id,
+                                    distance
+                                );
+
+                                setFormData(prev => ({
+                                    ...prev,
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                    total_biaya: newTotalCost
+                                }));
+                            }}
+                            onAddressSelect={(address) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    alamat_pengantaran: address
+                                }));
+                            }}
+                            kotaId={kotaId}
+                            deliveryRate={deliveryMethods.find(m => m.id === 2)?.biaya || 0}
+                        />
+
+                        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden mt-3">
+                            {/* Main Address (Read-only) */}
+                            <View className="px-4 py-3 border-b border-gray-200">
+                                <Text className="text-xs text-gray-500 font-poppins-regular mb-1">Alamat yang dipilih</Text>
+                                <Text className="text-gray-800 font-poppins-regular">
+                                    {formData.alamat_pengantaran || 'Belum memilih lokasi'}
+                                </Text>
+                            </View>
+
+                            {/* Address Description */}
                             <TextInput
-                                className={`px-4 py-4 text-gray-800 font-poppins-regular ${formErrors.alamat_pengantaran ? 'border-2 border-red-500' : 'border border-gray-200'
+                                className={`px-4 py-4 text-gray-800 font-poppins-regular ${formErrors.deskripsi_alamat ? 'border-2 border-red-500' : 'border border-gray-200'
                                     }`}
-                                placeholder="Masukkan alamat lengkap pengantaran..."
-                                placeholderTextColor="#64748b"
+                                placeholder="Tambahkan detail alamat (nama gedung, lantai, patokan, dll)..."
+                                placeholderTextColor="#9CA3AF"
                                 multiline={true}
                                 numberOfLines={4}
                                 textAlignVertical="top"
-                                value={formData.alamat_pengantaran}
+                                value={formData.deskripsi_alamat}
                                 onChangeText={(text) => {
-                                    setFormData(prev => ({ ...prev, alamat_pengantaran: text }));
-                                    if (formErrors.alamat_pengantaran) {
-                                        setFormErrors(prev => ({ ...prev, alamat_pengantaran: false }));
+                                    setFormData(prev => ({ ...prev, deskripsi_alamat: text }));
+                                    if (formErrors.deskripsi_alamat) {
+                                        setFormErrors(prev => ({ ...prev, deskripsi_alamat: false }));
                                     }
                                 }}
                                 style={{
@@ -758,13 +812,27 @@ const RentalForm = ({ route, navigation }) => {
                                     maxHeight: 150,
                                     borderRadius: 10
                                 }}
-                                keyboardDismissMode="none"
-                                keyboardShouldPersistTaps="handled"
                             />
+
+                            {deliveryDistance > 0 && (
+                                <View className="px-4 py-3 bg-blue-50 flex-row items-center justify-between">
+                                    <View className="flex-row items-center">
+                                        <MaterialIcon name="map-marker-distance" size={18} color="#0255d6" />
+                                        <Text className="text-blue-600 font-poppins-regular text-sm ml-2">
+                                            Jarak Pengantaran: {deliveryDistance.toFixed(1)} km
+                                        </Text>
+                                    </View>
+                                    <Text className="text-blue-600 font-poppins-medium">
+                                        +{formatRupiah(Math.ceil(deliveryDistance) *
+                                            (deliveryMethods.find(m => m.id === 2)?.biaya || 0))}
+                                    </Text>
+                                </View>
+                            )}
+
                             <View className="px-4 py-2 bg-blue-50 flex-row items-center">
                                 <MaterialIcon name="information-outline" size={18} color="#0255d6" />
                                 <Text className="text-blue-600 font-poppins-regular text-xs ml-2 flex-1">
-                                    Pastikan alamat akurat untuk memudahkan pengantaran
+                                    Pilih lokasi di peta dan pastikan alamat detail sudah benar
                                 </Text>
                             </View>
                         </View>

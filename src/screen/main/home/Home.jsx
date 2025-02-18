@@ -16,15 +16,6 @@ import { useUser } from '../../../services';
 
 const { height, width } = Dimensions.get('window');
 
-const CarTypeInfo = ({ icon, type }) => (
-  <View className="items-center mx-2">
-    <View className="bg-blue-50 p-3 rounded-xl mb-2">
-      <MaterialIcon name={icon} size={24} color="#0255d6" />
-    </View>
-    <Text className="text-sm font-poppins-medium text-gray-800">{type}</Text>
-  </View>
-);
-
 const Home = ({ navigation }) => {
   const { data: user, isLoading: isUserLoading } = useUser();
   const [cars, setCars] = useState([]);
@@ -244,8 +235,8 @@ const Home = ({ navigation }) => {
       {/* City Selection Modal */}
       <Modal
         isVisible={isCityModalVisible}
-        onBackdropPress={() => setIsCityModalVisible(false)}
-        onSwipeComplete={() => setIsCityModalVisible(false)}
+        onBackdropPress={handleCloseCityModal}
+        onSwipeComplete={handleCloseCityModal}
         swipeDirection={['down']}
         style={{ justifyContent: 'flex-end', margin: 0 }}
         animationInTiming={500}
@@ -266,7 +257,7 @@ const Home = ({ navigation }) => {
         >
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-xl font-poppins-semibold text-black">Pilih Kota Anda</Text>
-            <TouchableOpacity onPress={() => setIsCityModalVisible(false)}>
+            <TouchableOpacity onPress={handleCloseCityModal}>
               <Icon name="close" size={24} color="#0255d6" />
             </TouchableOpacity>
           </View>
@@ -300,8 +291,8 @@ const Home = ({ navigation }) => {
       {/* Car Details Modal */}
       <Modal
         isVisible={isCarDetailsModalVisible}
-        onBackdropPress={() => setIsCarDetailsModalVisible(false)}
-        onSwipeComplete={() => setIsCarDetailsModalVisible(false)}
+        onBackdropPress={handleCloseCarDetail}
+        onSwipeComplete={handleCloseCarDetail}
         swipeDirection={['down']}
         style={{ justifyContent: 'flex-end', margin: 0 }}
         animationInTiming={500}
@@ -310,48 +301,49 @@ const Home = ({ navigation }) => {
         backdropTransitionOutTiming={500}
         backdropOpacity={0.5}
       >
-        {selectedCar && (
-          <View
-            style={{
-              backgroundColor: 'white',
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              height: height * 0.85,
-            }}
-          >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 100 }} // Extra padding for bottom button
-            >
-              <View className="relative">
-                <FastImage
-                  source={{
-                    uri: selectedCar.mobil.foto
-                      ? `${process.env.APP_URL}/storage/${selectedCar.mobil.foto}`
-                      : "https://via.placeholder.com",
-                    priority: FastImage.priority.high
-                  }}
-                  style={{
-                    width: '100%',
-                    height: 256,
-                    borderTopLeftRadius: 16,
-                    borderTopRightRadius: 16,
-                    backgroundColor: '#e5e5e5' // Untuk debug
-                  }}
-                  resizeMode={FastImage.resizeMode.cover}
-                />
-                <TouchableOpacity
-                  onPress={handleCloseCarDetail}
-                  className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
-                >
-                  <Icon name="close" size={24} color="#0255d6" />
-                </TouchableOpacity>
-                <WishlistButton
-                  carId={selectedCar.mobil.id}
-                  kotaId={selectedCar.kota.id}
-                  userId={user.id} // Pass the current user's ID
-                />
-              </View>
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            height: height * 0.85,
+          }}
+        >
+          {selectedCar ? (
+            <>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 100 }}
+              >
+                <View className="relative">
+                  <FastImage
+                    source={{
+                      uri: selectedCar.mobil.foto
+                        ? `${process.env.APP_URL}/storage/${selectedCar.mobil.foto}`
+                        : "https://via.placeholder.com",
+                      priority: FastImage.priority.high
+                    }}
+                    style={{
+                      width: '100%',
+                      height: 256,
+                      borderTopLeftRadius: 16,
+                      borderTopRightRadius: 16,
+                      backgroundColor: '#e5e5e5'
+                    }}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
+                  <TouchableOpacity
+                    onPress={handleCloseCarDetail}
+                    className="absolute top-4 right-4 bg-white/70 rounded-full p-2"
+                  >
+                    <Icon name="close" size={24} color="#0255d6" />
+                  </TouchableOpacity>
+                  <WishlistButton
+                    carId={selectedCar.mobil.id}
+                    kotaId={selectedCar.kota.id}
+                    userId={user.id}
+                  />
+                </View>
 
               <View className="px-5 pt-5">
                 <Text className="text-2xl font-poppins-semibold mb-2 text-black">
@@ -392,23 +384,28 @@ const Home = ({ navigation }) => {
             </ScrollView>
 
             <View
-              className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: '#E5E7EB'
-              }}
-            >
-              <TouchableOpacity
-                onPress={handleRentCar}
-                className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
+                className="absolute bottom-0 left-0 right-0 p-4 bg-white shadow-2xl"
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: '#E5E7EB'
+                }}
               >
-                <Text className="text-white font-poppins-semibold text-base">
-                  Sewa Mobil Sekarang
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleRentCar}
+                  className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center"
+                >
+                  <Text className="text-white font-poppins-semibold text-base">
+                    Sewa Mobil Sekarang
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-gray-500 font-poppins-medium">Loading...</Text>
             </View>
-          </View>
-        )}
+          )}
+        </View>
       </Modal>
 
       <ScrollView
@@ -481,7 +478,7 @@ const Home = ({ navigation }) => {
           ) : (
             <View className="items-center justify-center py-8">
               <Text className="text-gray-500 font-poppins-medium text-center">
-                Tidak ada mobil tersedia di kota ini
+                Tidak ada mobil yang tersedia di kota ini
               </Text>
             </View>
           )}

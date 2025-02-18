@@ -87,7 +87,13 @@ android {
         versionName "1.0"
     }
     signingConfigs {
-        debug {
+        release {
+            storeFile file('blucarra.keystore')
+            storePassword '12345678'
+            keyAlias 'blucarra'
+            keyPassword '12345678'
+        }
+       debug {
             storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
@@ -95,13 +101,13 @@ android {
         }
     }
     buildTypes {
-        debug {
+         debug {
             signingConfig signingConfigs.debug
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

@@ -20,37 +20,9 @@ const KotaDetail = ({ route, navigation }) => {
     <View className="flex-1 bg-gray-50">
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Header with City Image */}
-      <View className="relative">
-        <FastImage
-          source={{
-            uri: city.foto
-              ? `${process.env.APP_URL}/storage/${city.foto}`
-              : "https://via.placeholder.com/400x200?text=City+Image",
-            priority: FastImage.priority.high
-          }}
-          style={{
-            width: '100%',
-            height: height * 0.35,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0
-          }}
-          resizeMode={FastImage.resizeMode.cover}
-        />
-        <LinearGradient
-          colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.3)']}
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0 
-          }}
-        />
-        
-        <View className="px-5 pt-12 pb-6 flex-row items-center z-10">
+      {/* Back Button Header - Fixed */}
+      <View className="absolute top-0 left-0 right-0 z-20">
+        <View className="px-5 pt-12 pb-6 flex-row items-center">
           <TouchableOpacity 
             onPress={() => navigation.goBack()} 
             className="mr-4"
@@ -64,34 +36,63 @@ const KotaDetail = ({ route, navigation }) => {
       </View>
 
       <ScrollView 
-        className="px-4 pt-4"
+        className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: height * 0.25 }}
       >
-        {/* Address Card */}
-        <View className="bg-white rounded-xl p-4 mb-4 shadow-md">
-          <View className="flex-row items-center mb-2">
-            <Icon name="location" size={20} color="#0255d6" />
-            <Text className="text-md font-poppins-semibold ml-3 text-gray-800">
-              Alamat
-            </Text>
-          </View>
-          <Text className="text-gray-600 font-poppins-regular">
-            {city.alamat || 'Alamat tidak tersedia'}
-          </Text>
+        {/* Image Section */}
+        <View className="relative" style={{ height: height * 0.35 }}>
+          <FastImage
+            source={{
+              uri: city.foto
+                ? `${process.env.APP_URL}/storage/${city.foto}`
+                : "https://via.placeholder.com/400x200?text=City+Image",
+              priority: FastImage.priority.high
+            }}
+            style={{
+              width: '100%',
+              height: '100%'
+            }}
+            resizeMode={FastImage.resizeMode.cover}
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.3)']}
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0 
+            }}
+          />
         </View>
 
-        {/* Description Card */}
-        <View className="bg-white rounded-xl p-4 shadow-md pb-4">
-          <View className="flex-row items-center mb-2">
-            <Icon name="information-circle" size={20} color="#0255d6" />
-            <Text className="text-md font-poppins-semibold ml-3 text-gray-800">
-              Deskripsi Kota
+        {/* Content Section */}
+        <View className="px-4 pt-4">
+          {/* Address Card */}
+          <View className="bg-white rounded-xl p-4 mb-4 shadow-md">
+            <View className="flex-row items-center mb-2">
+              <Icon name="location" size={20} color="#0255d6" />
+              <Text className="text-md font-poppins-semibold ml-3 text-gray-800">
+                Alamat
+              </Text>
+            </View>
+            <Text className="text-gray-600 font-poppins-regular">
+              {city.alamat || 'Alamat tidak tersedia'}
             </Text>
           </View>
-          <Text className="text-gray-600 font-poppins-regular">
-            {city.deskripsi || 'Deskripsi tidak tersedia'}
-          </Text>
+
+          {/* Description Card */}
+          <View className="bg-white rounded-xl p-4 shadow-md mb-4">
+            <View className="flex-row items-center mb-2">
+              <Icon name="information-circle" size={20} color="#0255d6" />
+              <Text className="text-md font-poppins-semibold ml-3 text-gray-800">
+                Deskripsi Kota
+              </Text>
+            </View>
+            <Text className="text-gray-600 font-poppins-regular">
+              {city.deskripsi || 'Deskripsi tidak tersedia'}
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>

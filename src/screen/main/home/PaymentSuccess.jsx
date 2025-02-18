@@ -24,7 +24,7 @@ const PaymentSuccess = ({ route, navigation }) => {
     }, []);
 
     const handleBackToHome = () => {
-        navigation.navigate('HomeMain');
+        navigation.navigate('MyRentMain');
     };
 
     return (
